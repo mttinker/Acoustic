@@ -1,0 +1,149 @@
+model{
+# Primary latent variable is Dmean, mean TRUE nest density (NOT mean call rate). 
+# Density allowed to vary across strata, Dstrat, and across sites within strata, Dens[i]
+# NOTE:
+# Since possible to have nest counts at sites with no call data, allow an additional 
+#  set of "No Call" sites, 1:NSiteNoCall, where only nest counts 
+#
+# At all other sites, there are two potential estimates: count based and call based, 
+#  and both are assumed to be normally distributed around true density (with sigD),
+#  giving us DensN and DensA  
+# In the case of nest counts, sequential counts at a site vary around DensN with sigC
+# For calls, we use a power function to relate calls to density:
+#     Calls = phi*Density^psi 
+# *** NOTE could also add "alpha" param for intercept if warranted (if calls when dens = 0)
+# where psi determines slope of Calls-Density fxn, alpha is intercept (call rate at 0 dens)
+# and phi is the asymptotic call rate at high density... could allow phi to vary by strata?
+#  (allowing phi to vary among strata would allow varyation in call rate / density fxn)
+# Thus mean expected call rate at site i is:
+#		Csite[i] <- phi*DensA[i]^psi
+#  where DensA[i] is estimated density at site i based on acoustic data,
+#  and Cs[i] = (phi*DensA[i]^psi)*peakTemp
+#
+#Priors
+Dmean ~ dlnorm(-2,1)  # True Mean Nest Density (vague prior)
+# Params for power function relating call rate to denstity 
+# phi param, scales density to call rates: informed prior
+phi ~ dnorm(fxnprior[1],fxnprior[2]) T(.5,) 
+# psi param, determines slope for density-call rate power fxn
+psi ~ dnorm(fxnprior[3],fxnprior[4]) T(0.001,)       
+#
+Dispers ~ dlnorm(0,2)   # Dispersion parameter (overdispersed calls)
+theta ~ dnorm(0,.01)    # Effect of moon illumination (1 = full moon, -1 = new moon)
+sigT ~ dunif(0.001,10)  # temporal variance term, call freq
+sigD ~  dunif(0.001,50) # measurement error in density estimates (for both methods)
+sigN ~ dunif(0.001,50)  # variance in density across strata
+sigS ~ dunif(0.001,50)  # variance in density, sites within strata
+sigC ~ dunif(0.001,50) # variance in sequential nest counts at a site
+# sigP ~ dunif(0.001,50)  # variance in phi across strata (phi scales call rate to density)
+#
+# tauP <- pow(sigP,-2)
+# tauD <- pow(sigD,-2)
+# tauN <- pow(sigN,-2)
+# tauS <- pow(sigS,-2)
+# NOTE: Z is variance inflation factor for density estimates from acoustic vs nest counts
+Z <- 2
+tauT <- pow(sigT,-2)
+Vn <- sigN^2 
+Vs <- sigS^2 	
+Vc <- sigC^2
+Vd <- sigD^2 
+# Parameters for Signal Quality detection probability logit function
+for (p in 1:8){
+	B[p] ~ dnorm(Bpar1[p],Bpar2[p])	
+}	
+# Temporal effect matrix, weeks x timesteps (15 min) 
+Temporal[1,1] ~ dunif(-8,-5) 
+Temporal[2,1] ~ dnorm(Temporal[1,1],tauT) T(-8,8)
+Temporal[1,2] ~ dnorm(Temporal[1,1],tauT) T(-8,8) 
+for (i in 3:NWeeks) {
+    diff.F[i] <- 2*Temporal[i-1,1]-Temporal[i-2,1]
+    Temporal[i,1] ~ dnorm(diff.F[i],tauT) T(-8,8)
+}
+for (i in 3:NTsteps) {
+    diff.H[i] <- 2*Temporal[1,i-1]-Temporal[1,i-2]
+    Temporal[1,i] ~ dnorm(diff.H[i],tauT) T(-8,8)
+}
+for (i in 2:NWeeks) {
+    for (j in 2:NTsteps) {
+       diff.T[i,j] <- (Temporal[i-1,j-1] + (Temporal[i,j-1]-Temporal[i-1,j-1]) 
+                       + (Temporal[i-1,j]-Temporal[i-1,j-1]))
+	   # diff.T[i,j] <- ifelse(TP[i,j]==1,max(1,diff.Tstar[i,j]),diff.Tstar[i,j])				
+       Temporal[i,j] ~ dnorm(diff.T[i,j],tauT) 
+    }
+}
+# Next loop ensures maximum of Temp matrix --> 1
+maxTmprl <- max(Temporal)
+for (i in 1:100){
+	TmprlMax[i] ~ dnorm(maxTmprl,4)
+}
+for(i in 1:NWeeks) {
+    for (j in 1:NTsteps){
+	   Temp[i,j] <- ilogit(Temporal[i,j])
+	   Temppk[i,j] <- Temp[i,j]*TP[i,j]
+	}
+}
+peakTemp <- sum(Temppk)/lngthpeak # pkindx = index of weeks/timesteps assumed to be "peak"	
+#
+# Now calculate latent variables of density and call rate
+# Calculate mean Density "Dstrat" by strata, log-normally distributed around Dmean
+muN <- log(Dmean/sqrt(1+Vn/Dmean^2))
+tauN <- 1/(log(1+ Vn/Dmean^2))
+for (k in 1:Nstrata){
+	# True mean density for strata k
+	Dstrat[k] ~ dlnorm(muN,tauN) T(0.000001,20) # Lognormal
+	# Estimate strata-specific phi param for this strata? 
+	#   phi[k] ~ dlnorm(phi0,tauP)
+	# params for log normal dist of Density across sites within strata k
+	muS[k] <- log(Dstrat[k]/sqrt(1+Vs/Dstrat[k]^2))
+    tauS[k] <- 1/(log(1+ Vs/Dstrat[k]^2))
+}
+## Calculate site-level densities and mean call rate (Cs) accounting for site var
+for (i in 1:NSite){    
+	# Mean estimated TRUE density by site:
+	Dens[i] ~ dlnorm(muS[strat[i]],tauS[strat[i]])  	
+	# Mean Estimated density from nest counts and acoustic data
+	muD[i] <- log(Dens[i]/sqrt(1+Vd/Dens[i]^2))
+	muDa[i] <- log(Dens[i]/sqrt(1+(Z*Vd)/Dens[i]^2))
+    tauD[i] <- 1/(log(1+ Vd/Dens[i]^2))
+	tauDa[i] <- 1/(log(1+ (Z*Vd)/Dens[i]^2))
+	DensN[i] ~ dlnorm(muD[i],tauD[i]) # Mean expected density, nest counts
+	DensA[i] ~ dlnorm(muDa[i],tauDa[i]) # Mean expected density, acoustic data
+	Csite[i] <- phi*DensA[i]^psi # Expected call rate for site i (from fxn)
+	Cs[i] <- Csite[i]*peakTemp 	 # Expected peak period call rate 
+ }
+ # Estimate mean expected peak period call rates for each strata
+ for (k in 1:Nstrata){
+    C[k] <- mean(Cs[indxS1[k]:indxS2[k]])
+ }
+# Estimate mean expected peak period call rates across all strata 
+C0 <- mean(C)
+# OBSERVED DATA
+# Cycle through nest count data
+for (n in 1:Ncounts){
+	muNC[n] <- log(DensN[SiteNC[n]]/sqrt(1+Vc/DensN[SiteNC[n]]^2))
+	tauNC[n] <- 1/(log(1+ Vc/DensN[SiteNC[n]]^2))
+	DensObsNC[n] ~ dlnorm(muNC[n],tauNC[n])		
+}
+# Cycle through nest counts for sites having no Acoustic data (if any)
+for (n in 1:NSiteNoCall){
+	DensnoA[n] ~ dlnorm(muS[StratNCnoA[n]],tauS[StratNCnoA[n]]) 
+	DensNnoA[n] ~ dnorm(DensnoA[n],tauD) T(0,)
+	muNCnoA[n] <- log(DensNnoA[n]/sqrt(1+Vc/DensNnoA[n]^2))
+	tauNCnoA[n] <- 1/(log(1+ Vc/DensNnoA[n]^2))
+	DensObsNCnoA[n] ~ dlnorm(muNCnoA[n],tauNCnoA[n])		
+}
+# Cycle through acoustic monitoring data for Observed Calls 
+for (i in 1:NObs){
+    # Mean expected detected calls per minute in the timestep (15min)
+	# First, determine ProbDetection based on signal quality - lofit function
+	ProbDetect[i] <- min(1,.25+ilogit(B[1]+B[2]*FS[i]+B[3]*FS[i]^2+B[4]*FS[i]^3+B[5]*LA[i]+B[6]*BU[i]+B[7]*CL[i]+B[8]*FS[i]*LA[i])) 
+	mu[i] <- Csite[SiteN[i]]*Temp[Wk[i],TS[i]]*exp(theta*moon[i])*Minutes[i]*ProbDetect[i]
+    # Variance in detected calls (accounts for overdispersion)
+    vr[i] <- ifelse(mu[i]<0,0.0000001, mu[i] + (mu[i]^2)/Dispers)
+    p[i] <- max(0.00000001,1-(vr[i]-mu[i])/vr[i])
+    # Observed number calls recorded, as neg binomial random variable
+    Calls[i] ~ dnegbin(p[i],Dispers)    
+}
+}
+
