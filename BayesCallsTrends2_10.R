@@ -186,6 +186,11 @@ if(Nstrat==1){
   for(y in 1:(Nyrs-1)){
     labels_r = c(labels_r, paste0("Mean r for ", as.character(Yearvals[y])))
   }
+  for (j in 1:Nstrat){
+      for(y in 1:(Nyrs-1)){
+         labels_r = c(labels_r, paste0("Strata r for ",Strata_trends[j]," in ",as.character(Yearvals[y])))
+      }
+  } 
 }
 caterplot(out,params[parnum_r],denstrip = FALSE, reorder=FALSE,
           quantiles=list(outer=c(0.025,0.975),inner=c(0.1666,0.8333)),lwd=c(.1,4),
