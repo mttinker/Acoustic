@@ -35,6 +35,7 @@ sigD ~  dunif(0.001,50) # measurement error in density estimates (for both metho
 sigN ~ dunif(0.001,50)  # variance in density across strata
 sigS ~ dunif(0.001,50)  # variance in density, sites within strata
 sigC ~ dunif(0.001,50) # variance in sequential nest counts at a site
+sigW ~ dunif(0.001,100) # variance in call rate across weeks within site
 # sigP ~ dunif(0.001,50)  # variance in phi across strata (phi scales call rate to density)
 #
 # tauP <- pow(sigP,-2)
@@ -48,6 +49,9 @@ Vn <- sigN^2
 Vs <- sigS^2 	
 Vc <- sigC^2
 Vd <- sigD^2 
+Vw <- sigW^2
+muW <- log(1/sqrt(1+Vw))
+tauW <- 1/(log(1+Vw))	
 # Temporal effect matrix, weeks x timesteps (15 min) 
 Temporal[1,1] ~ dunif(-8,-5) 
 Temporal[2,1] ~ dnorm(Temporal[1,1],tauT) T(-8,8)
@@ -107,6 +111,10 @@ for (i in 1:NSite){
 	DensA[i] ~ dlnorm(muDa[i],tauDa[i]) # Mean expected density, acoustic data
 	Csite[i] <- phi*DensA[i]^psi # Expected call rate for site i (from fxn)
 	Cs[i] <- Csite[i]*peakTemp 	 # Expected peak period call rate 
+	for(j in 1:Numweeks[i]){
+		# Weekly variance within site: epsilon = error multiplier, mean of 1
+		eps[Strtweek[i]+j-1,i] ~ dlnorm(muW,tauW)
+	}   
  }
  # Estimate mean expected peak period call rates for each strata
  for (k in 1:Nstrata){
@@ -132,7 +140,7 @@ for (n in 1:NSiteNoCall){
 # Cycle through acoustic monitoring data for Observed Calls 
 for (i in 1:NObs){
     # Mean expected detected calls per minute in the timestep (15min)
-	mu[i] <- Csite[SiteN[i]]*Temp[Wk[i],TS[i]]*exp(theta*moon[i])*Minutes[i]
+	mu[i] <- Csite[SiteN[i]]*Temp[Wk[i],TS[i]]*exp(theta*moon[i])*Minutes[i]*eps[Wk[i],SiteN[i]]
     # Variance in detected calls (accounts for overdispersion)
     vr[i] <- ifelse(mu[i]<0,0.0000001, mu[i] + (mu[i]^2)/Dispers)
     p[i] <- max(0.00000001,1-(vr[i]-mu[i])/vr[i])

@@ -62,12 +62,12 @@ for (k in 1:Nstrata){
 }
 ## Calculate site-level mean call rate (Cs) accounting for site var
 for (i in 1:NSite){    
-   # Mean expected max call rate for site S     
-   # Csite[i] ~ dnorm(C[strat[i]],tauS) T(0,)  # Normal 
-   Csite[i] ~ dlnorm(muS[strat[i]],tauS[strat[i]])   # Lognormal
-   # Mean peak period call rate for site S
-   Cs[i] <- Csite[i]*peakTemp 
-   for(j in 1:Numweeks[i]){
+    # Mean expected max call rate for site S     
+    # Csite[i] ~ dnorm(C[strat[i]],tauS) T(0,)  # Normal 
+    Csite[i] ~ dlnorm(muS[strat[i]],tauS[strat[i]])   # Lognormal
+    # Mean peak period call rate for site S
+    Cs[i] <- Csite[i]*peakTemp 
+    for(j in 1:Numweeks[i]){
 		# Weekly variance within site: epsilon = error multiplier, mean of 1
 		eps[Strtweek[i]+j-1,i] ~ dlnorm(muW,tauW)
 	}   

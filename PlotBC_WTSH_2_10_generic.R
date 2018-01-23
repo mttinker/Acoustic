@@ -2,14 +2,13 @@
 # Purpose of this file is for user to specify parameters needed for plotting results
 # NOTE: Assumed that this script is in same directory as Results file
 # USER SPECIFIED PARAMETERS -------------------------------------------------
-Resultsfile = "Results_WTSH_2017_2_10"
+Resultsfile = "Results_WTSH_2016_2_10"
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
 # Set root directory path... enter absolute path or relative,
 RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
 AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where plot code is stored
 DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files stored
 RunFile = 'BayesCallsPlots2_10'       # Plotting Script
-Strata_focal1 = 'North West Pisonia'  # Focal Strata name for detailed plots
 # Next lines used to select sites for making plots of mean expected call rate
 #  over a focal period (can be different from peak period)
 Nfocalsites = 3 # Number of sites defined below... generally 10 or less
@@ -18,8 +17,8 @@ Site_focal[1] = 'NW2'  # Site name for detailed plots
 Site_focal[2] = 'NW3'  # Site name for detailed plots
 Site_focal[3] = 'NW4'  # Site name for detailed plots
 # Define focal period of interest
-DateFocalStrt = "February 19"
-DateFocalStop = "April 19"
+DateFocalStrt = "February 1"
+DateFocalStop = "February 28"
 TimeFocalStrt = -120  # Time boundary 1, minutes relative to a reference event (sunrise or sunset)
 TimeFocalStop =  -60  # Time boundary 2, always > than boundary1 (minutes relative to event) 
 Time_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise

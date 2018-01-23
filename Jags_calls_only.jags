@@ -1,6 +1,6 @@
 model{
 # Set Priors
-Cmean ~ dgamma(1,.5) T(0.00001,50)# grand mean of log Call Rate, across all strata
+Cmean ~ dgamma(1,.5) T(0.00001,100)# grand mean of log Call Rate, across all strata
 Dispers ~ dlnorm(0,2)
 theta ~ dnorm(0,.01)  # Effect of moon illumination (1 = full moon, -1 = new moon)
 sigT ~ dlnorm(-1,4)   # temporal variance term, call freq
@@ -54,7 +54,7 @@ tauN <- 1/(log(1+ Vn/Cmean^2))
 for (k in 1:Nstrata){
     # Mean max call rate for strata k
 	# Cstrat[k] ~ dnorm(Cmean,tauN) T(0.000001,10)  # Normal  
-	Cstrat[k] ~ dlnorm(muN,tauN) T(0.000001,60) # Lognormal
+	Cstrat[k] ~ dlnorm(muN,tauN) T(0.000001,100) # Lognormal
 	# params for log normal dist of C across sites within strata k
 	muS[k] <- log(Cstrat[k]/sqrt(1+Vs/Cstrat[k]^2))
     tauS[k] <- 1/(log(1+ Vs/Cstrat[k]^2))

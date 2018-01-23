@@ -69,19 +69,19 @@ if (data_opt==2){
 # Caterpiller plot for sites in select strata  ----------------------------------------
 siteparnum = which(params=='Cs')
 stratlist <- Stratalist$StratName
-sn = which(stratlist==Strata_focal1)
-# Stratfocal <- as.character(tk_select.list(as.character(stratlist),title = 'Select Strata to Examine'))          
-Stratfocal = stratlist[sn]
-ii = which(Sitelist$Strata==Stratfocal)
-tmplabs = as.character(Sitelist$SPIDc[ii])
-tmplist = paste0(params[siteparnum],"[",ii[1],"]")
-for (i in 2:length(ii)){
-  tmplist = c(tmplist,paste0(params[siteparnum],"[",ii[i],"]"))
+for (sn in 1:length(stratlist)){
+  Stratfocal = stratlist[sn]
+  ii = which(Sitelist$Strata==Stratfocal)
+  tmplabs = as.character(Sitelist$SPIDc[ii])
+  tmplist = paste0(params[siteparnum],"[",ii[1],"]")
+  for (i in 2:length(ii)){
+    tmplist = c(tmplist,paste0(params[siteparnum],"[",ii[i],"]"))
+  }
+  caterplot(out,tmplist,denstrip = FALSE, reorder=FALSE,
+            quantiles=list(outer=c(0.025,0.975),inner=c(0.1666,0.8333)),lwd=c(.1,4),
+            labels=tmplabs, labels.loc = 'above',las = 0, cex.labels = .8)
+  title(main = paste0("Mean Call Rate by Site, ",Stratfocal,", ", as.character(Yearfocal)), font.main = 4)
 }
-caterplot(out,tmplist,denstrip = FALSE, reorder=FALSE,
-          quantiles=list(outer=c(0.025,0.975),inner=c(0.1666,0.8333)),lwd=c(.1,4),
-          labels=tmplabs, labels.loc = 'above',las = 0, cex.labels = .8)
-title(main = paste0("Mean Call Rate by Site, ",Strata_focal1), font.main = 4)
 
 # QC call detction probability -----------------------------------------
 if (QC_opt==1){

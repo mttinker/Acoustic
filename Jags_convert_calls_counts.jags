@@ -1,0 +1,37 @@
+model{
+#
+#Priors
+# alpha param, intercept for density-call rate fxn
+alpha ~ dgamma(.1,.1) 
+# beta param, determines slope for density-call rate fxn
+beta ~ dgamma(.1,.1)     
+#
+sigC ~ dunif(0.001,50) # variance in sequential nest counts at a site
+sigD ~  dunif(0.001,50) # variance in density estimation function
+Vc <- sigC^2
+Vd <- sigD^2 
+## Mean call rate (Csite) and estimated densities by site 
+for (i in 1:NSite){    
+	# Mean estimated TRUE call rate by site:
+	Csite[i] ~ dunif(0.0001,100) 
+	Dens[i] <- alpha+Csite[i]*beta # Mean expected density, deterministic
+	# Dens[i] <- alpha*Csite[i]^beta # Mean expected density, deterministic
+	muD[i] <- log(Dens[i]/sqrt(1+Vd/Dens[i]^2))
+	tauD[i] <- 1/(log(1+ Vd/Dens[i]^2))
+	DensN[i] ~ dlnorm(muD[i],tauD[i]) # Mean expected density with error
+ }
+# OBSERVED DATA
+# Cycle through nest count data
+for (n in 1:Ncounts){
+	muNC[n] <- log(DensN[SiteNC[n]]/sqrt(1+Vc/DensN[SiteNC[n]]^2))
+	tauNC[n] <- 1/(log(1+ Vc/DensN[SiteNC[n]]^2))
+	DensObsNC[n] ~ dlnorm(muNC[n],tauNC[n])		
+}
+# Cycle through posterior samples of call rate 
+for (i in 1:NObs){
+	mu[i] <- log(Csite[SiteN[i]]/sqrt(1+Vvals[SiteN[i]]/Csite[SiteN[i]]^2))	
+	tau[i] <- 1/(log(1+ Vvals[SiteN[i]]/Csite[SiteN[i]]^2))
+	CR[i] ~ dlnorm(mu[i],tau[i])	
+}
+}
+

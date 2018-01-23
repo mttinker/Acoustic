@@ -24,20 +24,21 @@ start.time <- Sys.time()  # start a timer
 RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
 AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code is stored
 RunFile = 'BayesCalls2_10'       # Version of BayesCalls to run
-DataFolder =  'CapCays/data'  # Folder path within RootDir where raw data files stored
-ProjectName =  'Bayesian_2017'  # Name of project (for user reference)
+DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files stored
+ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
+ProjectName =  'Bayesian_2014'  # Name of project (for user reference)
 Species =  'WTSH'  # Species name for data analysis
 Countsdatfile = c(paste0('Counts_CapCays_',Species,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 Datafile =  paste0('BayesCalls2_02_',Species,'_2014-2017_NoAudit.RData')  #Name of data file for analysis 
 ProjectLocation =  'Queensland'  # Island name for data analysis
-ProjectYear =  2017  # Year of analysis project 
-Yearfocal =  2017  # Focal year for Bayesian analysis
+ProjectYear =  2014  # Year of analysis project 
+Yearfocal =  2014  # Focal year for Bayesian analysis
 
 TS_strt =  1  # Starting time step (beginning of range to load data)
 TS_stop =  57  # Ending timestep (end of range to load data)
 TimeStep1 =  '5:00PM'  # Clock time (24hr) of timestep1
 TimeStepIntvl =  15  # Number of minutes in each timestep
-subsamp =  10  # Level of Sub-sampling of entire data set: use every nth record
+subsamp =  5  # Level of Sub-sampling of entire data set: use every nth record
 
 if (Yearfocal==2017) {
     # Analysis period
@@ -86,20 +87,20 @@ if (Species=='WTSH') {
 
 calendar_opt =  2  # year range: 1 = All data within calendar year, 2 = data spans New Year
 data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
+QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
 prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
 PriorResultsFile =  c()  # OPTIONAL: if prior_opt = 2, Rdata file containing parameter priors
 
-Ncores = 20
-Nsim =  2000  # Total # MCMS sims: Actual saved reps = (Nsim-Nburnin) * (num Cores)
-Nburnin =  1500  # Number of burn-in reps: Actual reps = (Nsim-Nburnin) * (num Cores)
+Nchains = 20
+Nburnin =  1500  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
 Nadapt =  100  # Number of adapting reps, default 100
-
-
+Totalreps = 5000 # Total desired reps (ie # simulations making up posterior)
 #
 # END USER SPECIFIED PARAMETERS ---------------------------------------------
 #
 # (Should not need to edit anything below here)
 # 
+Nsim =  Totalreps/Nchains + Nburnin  # Total # MCMS sims: Actual saved reps = (Nsim-Nburnin) * (num Cores)
 # Process Filenames and directory names -------------------------------------
 #
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -146,7 +147,7 @@ if (data_opt>1){
 }
 
 DataFolder = paste0(RootDir,"/",DataFolder)
-
+ResultsFolder = paste0(RootDir,"/",ResultsFolder)
 #
 #  Function to get the name of this current user script 
 callscript <- function() {
@@ -176,10 +177,20 @@ callscript <- function() {
 }
 # Get the name of current script file, and create matching SaveResults filename 
 CallingScript = callscript()
-SaveResults = CallingScript
-SaveResults = gsub("RunBC","Results",CallingScript)
-SaveResults = paste0(SaveResults,"data")
+# SaveResults = CallingScript
+# SaveResults = gsub("RunBC","Results",CallingScript)
+# SaveResults = paste0(SaveResults,"data")
+# 
+# SaveResults = gsub("BayesCalls","Results",RunFile)
+
+substrRight <- function(x, n){
+  substr(x, nchar(x)-n+1, nchar(x))
+}
+SaveResults = substrRight(RunFile, 6)
+SaveResults = paste0(ResultsFolder,'/Results', '_', Species, '_', ProjectYear, '_', SaveResults,"data")
+
 rm('callscript')
+rm('substrRight')
 #
 # Run Bayesian Analysis -----------------------------------------------------
 # Source BayesCalls program (specify version as X_XX, e.g. BayesCalls2_01) 

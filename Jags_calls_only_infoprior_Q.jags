@@ -7,12 +7,16 @@ theta ~ dnorm(Infpriors[2,1],Infpriors[2,2])  # Effect of moon illumination (1 =
 sigT ~ dlnorm(Infpriors[3,1],Infpriors[3,2])  # temporal variance term, call freq
 sigN ~ dlnorm(Infpriors[4,1],Infpriors[4,2])  # variance in call rate across strata
 sigS ~ dlnorm(Infpriors[5,1],Infpriors[5,2])  # variance in call rate, sites within strata
+sigW ~ dunif(0.001,100) # variance in call rate across weeks within site
 #
 tauT <- pow(sigT,-2)
 # tauN <- pow(sigN,-2)
 # tauS <- pow(sigS,-2)
 Vn <- sigN^2 
-Vs <- sigS^2 	
+Vs <- sigS^2 
+Vw <- sigW^2
+muW <- log(1/sqrt(1+Vw))
+tauW <- 1/(log(1+Vw))	
 #
 # Temporal effect matrix, weeks x timesteps (15 min) 
 Temporal[1,1] ~ dunif(-8,-5) 
@@ -59,11 +63,15 @@ for (k in 1:Nstrata){
 }
 ## Calculate site-level mean call rate (Cs) accounting for site var
 for (i in 1:NSite){    
-   # Mean expected max call rate for site S     
-   # Csite[i] ~ dnorm(C[strat[i]],tauS) T(0,)  # Normal 
-   Csite[i] ~ dlnorm(muS[strat[i]],tauS[strat[i]])   # Lognormal
-   # Mean peak period call rate for site S
-   Cs[i] <- Csite[i]*peakTemp 
+    # Mean expected max call rate for site S     
+    # Csite[i] ~ dnorm(C[strat[i]],tauS) T(0,)  # Normal 
+    Csite[i] ~ dlnorm(muS[strat[i]],tauS[strat[i]])   # Lognormal
+    # Mean peak period call rate for site S
+    Cs[i] <- Csite[i]*peakTemp 
+    for(j in 1:Numweeks[i]){
+		# Weekly variance within site: epsilon = error multiplier, mean of 1
+		eps[Strtweek[i]+j-1,i] ~ dlnorm(muW,tauW)
+	}   
  }
  # Estimate mean expected peak period call rates for each strata
  for (k in 1:Nstrata){
@@ -74,7 +82,7 @@ C0 <- mean(C[1:Nstrata])
 # Cycle through acoustic monitoring data for Observed Calls 
 for (i in 1:NObs){
     # Mean expected detected calls per minute in the timestep (15min)
-	mu[i] <- Csite[SiteN[i]]*Temp[Wk[i],TS[i]]*exp(theta*moon[i])*Minutes[i]
+	mu[i] <- Csite[SiteN[i]]*Temp[Wk[i],TS[i]]*exp(theta*moon[i])*Minutes[i]*eps[Wk[i],SiteN[i]]
     # Variance in detected calls (accounts for overdispersion)
     vr[i] <- ifelse(mu[i]<0,0.0000001, mu[i] + (mu[i]^2)/Dispers)
     p[i] <- max(0.00000001,1-(vr[i]-mu[i])/vr[i])

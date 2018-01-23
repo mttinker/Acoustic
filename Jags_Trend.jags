@@ -1,0 +1,35 @@
+model{
+#Priors
+# Mean r for all areas: weak normal prior with mean of 0, high variance
+rmean ~ dnorm(0,.01) 
+# Variance parameter priors
+sigR ~ dlnorm(-2,1) # Among-yr variance in r, weakly informed prior, mean of 0.06
+sigS ~ dlnorm(-3,4) # Among-strata variance in r, weakly informed prior, mean of 0.06
+tauR <- pow(sigR,-2)
+tauS <- pow(sigS,-2)
+#
+# Loop through years and strata to estimate growth rates "r"
+for (t in 1:(Nyrs-1)){
+	rY[t] ~ dnorm(rmean,tauR) 	# mean r for year t, across strata
+	for (s in 1:Nstrat){
+		r[t,s] ~ dnorm(rY[t],tauS) 	# r for strata s in year t
+	}
+}
+# Loop through strata and years to estimate call rate trends
+for (s in 1:Nstrat){
+	mu0[s] <- log(Cmean[1,s]/sqrt(1+Vvals[1,s]/Cmean[1,s]^2))
+	tau0[s] <- 1/(log(1+ Vvals[1,s]/Cmean[1,s]^2))
+	C0[s] ~ dlnorm(mu0[s],tau0[s])	
+	# C0[s] ~ dnorm(Cmean[1,s],TauVals[1,2]) T(0,)	
+	C[1,s] <- C0[s]	
+	for (t in 2:(Nyrs)){
+		C[t,s] <- C[t-1,s]*exp(r[t-1,s])
+	}
+}
+# Finally, loop through "observed" data, call rate samples from posterior
+for (i in 1:Nobs){
+	mu[i] <- log(C[YearN[i],StratN[i]]/sqrt(1+Vvals[YearN[i],StratN[i]]/C[YearN[i],StratN[i]]^2))	
+	tau[i] <- 1/(log(1+ Vvals[YearN[i],StratN[i]]/C[YearN[i],StratN[i]]^2))
+	CR[i] ~ dlnorm(mu[i],tau[i])	
+}
+}

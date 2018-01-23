@@ -3,7 +3,6 @@
 #  using a Bayesian State Space model, executed using JAGS
 #  NOTE: this should be sourced from a script file that sets user parameters
 #
-QCpriorcalc = 1
 # LOAD NECESSARY LIBRARIES-----------------------------------------
 #existing_Packages<-as.list(installed.packages()[,1])
 # Add new packages you might need to this line, to check if they're installed and install missing packages
@@ -297,76 +296,75 @@ BU = log(1+burst)     # Burst variable re-scaled, log of burst+1
 detach(dat)
 
 # Priors for Call Quality -------------------------------------------------------------------
-# Evaluate Call Quality using logistic regression
-if (QCpriorcalc==1){
-  # i = which(pk>=0)
-  i = sample(length(pk),10000,replace = TRUE)
-  
-  df = data.frame(hits=pmin(1,Calls[i]),FS = FS[i], LA = LA[i], CL = CL[i],BU = BU[i],
-                  FS2 = FS[i]^2, FS3 = FS[i]^3, LA2 = LA[i]^2, LA3 = LA[i]^3, FSLA = FS[i]*LA[i])
-  model <- glm(hits ~ FS + FS2 + FS3 + LA + BU + CL + FSLA,
-               family=binomial(link='logit'),data=df)
-  summary(model)
-  df$prob = predict(model, newdata = df, type = "response")
-  plot(df$FS[df$hits==0],df$LA[df$hits==0],col="blue",ylim = c(0,4),xlim = c(0,100))
-  points(df$FS[df$hits==1],df$LA[df$hits==1],col="red",ylim = c(0,4),xlim = c(0,100))
-  newdat = df[1:800,]
-  Prob1 = matrix(nrow=20,ncol=20)
-  Prob2 = matrix(nrow=20,ncol=20)
-  cntr = 0
-  cntrC = 0
-  for(j in c(0.001,.03)){
-    cntrx = 0
-    cntrC = cntrC +1
-    for(f in seq(10,100,length.out = 20)){
-      cntrx = cntrx+1
-      cntry = 0    
-      for(l in seq(.5,4,length.out = 20)){
-        cntry = cntry+1
-        cntr = cntr+1
-        newdat$hits[cntr]=0
-        newdat$FS[cntr]=f
-        newdat$FS2[cntr]=f^2
-        newdat$FS3[cntr]=f^3
-        newdat$LA[cntr]=l
-        newdat$LA2[cntr]=l^2
-        newdat$BU[cntr]=j
-        newdat$CL[cntr]=.001
-        newdat$FSLA[cntr]=f*l
-        if (cntrC == 1){
-          Prob1[cntrx,cntry] = predict(model, newdata = newdat[cntr,], type = "response")
-        }else{
-          Prob2[cntrx,cntry] = predict(model, newdata = newdat[cntr,], type = "response")
-        }
+# Evaluate Call Quality params using logistic regression
+i = sample(length(pk),10000,replace = TRUE)
+
+df = data.frame(hits=pmin(1,Calls[i]),FS = FS[i], LA = LA[i], CL = CL[i],BU = BU[i],
+                FS2 = FS[i]^2, FS3 = FS[i]^3, LA2 = LA[i]^2, LA3 = LA[i]^3, FSLA = FS[i]*LA[i])
+model <- glm(hits ~ FS + FS2 + FS3 + LA + BU + CL + FSLA,
+             family=binomial(link='logit'),data=df)
+summary(model)
+df$prob = predict(model, newdata = df, type = "response")
+plot(df$FS[df$hits==0],df$LA[df$hits==0],col="blue",ylim = c(0,4),xlim = c(0,100))
+points(df$FS[df$hits==1],df$LA[df$hits==1],col="red",ylim = c(0,4),xlim = c(0,100))
+newdat = df[1:800,]
+Prob1 = matrix(nrow=20,ncol=20)
+Prob2 = matrix(nrow=20,ncol=20)
+cntr = 0
+cntrC = 0
+for(j in c(0.001,.03)){
+  cntrx = 0
+  cntrC = cntrC +1
+  for(f in seq(10,100,length.out = 20)){
+    cntrx = cntrx+1
+    cntry = 0    
+    for(l in seq(.5,4,length.out = 20)){
+      cntry = cntry+1
+      cntr = cntr+1
+      newdat$hits[cntr]=0
+      newdat$FS[cntr]=f
+      newdat$FS2[cntr]=f^2
+      newdat$FS3[cntr]=f^3
+      newdat$LA[cntr]=l
+      newdat$LA2[cntr]=l^2
+      newdat$BU[cntr]=j
+      newdat$CL[cntr]=.001
+      newdat$FSLA[cntr]=f*l
+      if (cntrC == 1){
+        Prob1[cntrx,cntry] = predict(model, newdata = newdat[cntr,], type = "response")
+      }else{
+        Prob2[cntrx,cntry] = predict(model, newdata = newdat[cntr,], type = "response")
       }
     }
   }
-  thrdvar = 'Burst'
-  newdat$prob = predict(model, newdata = newdat, type = "response")
-  xx = seq(10,100,length.out = 20); yy = seq(.5,4,length.out = 20)
-  library(lattice)
-  levelplot(Prob1, data = NULL, aspect = "fill",
-            xlim = c(0,100),ylim = c(0.5,4),
-            row.values = xx, column.values = yy,
-            xlab = 'Flux Sensitive', ylab = 'Level Absolute',
-            main= paste0(thrdvar, '= low'))
-  levelplot(Prob2, data = NULL, aspect = "fill",
-            xlim = c(0,100),ylim = c(0.5,4),
-            row.values = xx, column.values = yy,
-            xlab = 'Flux Sensitive', ylab = 'Level Absolute',
-            main= paste0(thrdvar, '= high'))
-  
-  # Extract coefficients and std erros as priors for Bayesian model
-  Bpar1 =  summary(model)$coefficients[, 1] #
-  Bpar1[1] = Bpar1[1]+0.5 # Increase intercept such that max prob ~ 0.95
-  Bpar2 =  summary(model)$coefficients[, 2]
-  # Bpar2[1] = Bpar2[1]
-  Bpar2 = 1/Bpar2^2
-} else {
-  # OR used previously estimated vals:
-  Bpar1 = c(9.633474e-01, 1.658534e-01, -4.132069e-03, 3.262024e-05, 1.504665e+00, -7.229384e-01, 1.210607e+01, -3.062242e-02)
-  Bpar2 = c(5.284500e+00, 7.894986e+02, 1.457988e+06, 1.892145e+10, 1.069987e+00, 1.255609e+01, 6.176648e-02, 5.761319e+03)
 }
+thrdvar = 'Burst'
+newdat$prob = predict(model, newdata = newdat, type = "response")
+xx = seq(10,100,length.out = 20); yy = seq(.5,4,length.out = 20)
+library(lattice)
+levelplot(Prob1, data = NULL, aspect = "fill",
+          xlim = c(0,100),ylim = c(0.5,4),
+          row.values = xx, column.values = yy,
+          xlab = 'Flux Sensitive', ylab = 'Level Absolute',
+          main= paste0(thrdvar, '= low'))
+levelplot(Prob2, data = NULL, aspect = "fill",
+          xlim = c(0,100),ylim = c(0.5,4),
+          row.values = xx, column.values = yy,
+          xlab = 'Flux Sensitive', ylab = 'Level Absolute',
+          main= paste0(thrdvar, '= high'))
+
+# Extract coefficients and std erros as priors for Bayesian model
+Bpar1 =  summary(model)$coefficients[, 1] #
+newdat = data.frame(hits=pmin(1,Calls),FS = FS, LA = LA, CL = CL, BU = BU,
+                    FS2 = FS^2, FS3 = FS^3, LA2 = LA^2, LA3 = LA^3, FSLA = FS*LA)
+TMP = predict(model, newdata = newdat, type = "response")
+# Select data with >25% the average chance of hits
+Q = which(TMP>mean(newdat$hits)*.25)  # IF QC_opt = 0 USE THIS TO FILTER DATA
+NObsQ = length(Q)
+Bpar1[1] = Bpar1[1]+0.5 # Increase intercept such that max prob ~ 0.95
+Bpar2 =  summary(model)$coefficients[, 2]
+# Bpar2[1] = Bpar2[1]
+Bpar2 = 1/Bpar2^2
 
 # Prepare to run JAGS -----------------------------------------------------
 
@@ -378,114 +376,223 @@ set.seed(123)
 
 # For parallel (comment out for serial)
 cores<-detectCores()
-cores = min(cores, 20)
+cores = min(cores, Nchains)
 cl <- makeCluster(cores[1])
 registerDoParallel(cl)
-Nchains = cores      # 8
 
 # Set up data, inits and params structures for JAGS,
-# Note: this depends on data option and prior option
-if (data_opt==1 & prior_opt==1){
-  # Data: A named list of the objects needed by JAGS
-  data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
-               Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
-               NWeeks=NWeeks,NTsteps=NTsteps,
-               moon=Moon,Nstrata=Nstrata,strat=stratnum,
-               lngthpeak=lngthpeak,TP=Temppeak,
-               FS=FS,LA=LA,CL=CL,BU=BU,Bpar1=Bpar1,
-               Bpar2=Bpar2,TmprlMax=TmprlMax,
-               indxS1=indxS1,indxS2=indxS2) 
+# Note: analysis depends on user options: data type, priors and QC filter or adjust
+#
+if (QC_opt==0){
   
-  # Inits: Best to generate initial values using function
-  inits <- function(){
-    list(sigT=runif(1,0.3,0.6),sigN=runif(1,1,5),sigS=runif(1,2,10),
-         theta=runif(1,-.1,.1),Dispers=runif(1,.15,.25))
+  if (data_opt==1 & prior_opt==1){
+    # Data: A named list of the objects needed by JAGS
+    data <- list(Calls=Calls[Q],SiteN=SiteN[Q],Minutes=minutes[Q],
+                 Wk=Wk[Q],TS=TS[Q],NObs=NObsQ,NSite=NSite, 
+                 NWeeks=NWeeks,NTsteps=NTsteps,
+                 moon=Moon[Q],Nstrata=Nstrata,strat=stratnum,
+                 lngthpeak=lngthpeak,TP=Temppeak,
+                 TmprlMax=TmprlMax,Numweeks=Numweeks,Strtweek=Strtweek,
+                 indxS1=indxS1,indxS2=indxS2) 
+    
+    # Inits: Best to generate initial values using function
+    inits <- function(){
+      list(sigT=runif(1,0.3,0.6),sigN=runif(1,1,5),sigS=runif(1,2,10),sigW=runif(1,.1,.5),
+           theta=runif(1,-.1,.1),Dispers=runif(1,.15,.25))
+    }
+    # List of parameters to monitor:
+    params <- c('theta','sigT','sigS','sigN','sigW','Dispers','peakTemp',
+                'C0','C','Cs','Csite','Temp','eps') # 
+    #     NOTE: to save "E" matrix, need to run in serial not parallel
+    #           due to memory limitations of parallel
+    
+    # Model to be run:
+    modfile = 'Jags_calls_only_Q.jags'
+  }else if(data_opt==1 & prior_opt==2){
+    data <- list(Calls=Calls[Q],SiteN=SiteN[Q],Minutes=minutes[Q],
+                 Wk=Wk[Q],TS=TS[Q],NObs=NObsQ,NSite=NSite, 
+                 NWeeks=NWeeks,NTsteps=NTsteps,
+                 moon=Moon[Q],Nstrata=Nstrata,strat=stratnum,
+                 lngthpeak=lngthpeak,TP=Temppeak,
+                 TmprlMax=TmprlMax,Numweeks=Numweeks,Strtweek=Strtweek,
+                 indxS1=indxS1,indxS2=indxS2,
+                 Infpriors=Infpriors) 
+    
+    # Inits: Best to generate initial values using function
+    inits <- function(){
+      list(Dispers=runif(1,.2,.25))
+    }
+    # List of parameters to monitor:
+    params <- c('theta','sigT','sigN','sigS','sigW','Dispers','peakTemp',
+                'C0','C','Cs','Csite','Temp','eps') # 
+    #     NOTE: to save "E" matrix, need to run in serial not parallel
+    #           due to memory limitations of parallel
+    
+    # Model to be run:
+    modfile = 'Jags_calls_only_infoprior_Q.jags'  
+  }else if(data_opt==2 & prior_opt==1){
+    data <- list(Calls=Calls[Q],SiteN=SiteN[Q],Minutes=minutes[Q],
+                 Wk=Wk[Q],TS=TS[Q],NObs=NObsQ,NSite=NSite, 
+                 NWeeks=NWeeks,NTsteps=NTsteps,
+                 moon=MoonQ,Nstrata=Nstrata,strat=stratnum,
+                 Ncounts=Ncounts,NSiteNoCall=NSiteNoCall,
+                 SiteNC=SiteNC,StratNCnoA=StratNCnoA,
+                 Numweeks=Numweeks,Strtweek=Strtweek,
+                 DensObsNC=DensObsNC,DensObsNCnoA=DensObsNCnoA,
+                 indxS1=indxS1,indxS2=indxS2, fxnprior=fxnprior,
+                 TP=Temppeak,lngthpeak=lngthpeak,TmprlMax=TmprlMax) 
+    # Inits: Best to generate initial values using function
+    inits <- function(){
+      list(sigT=runif(1,0.3,0.6),sigN=runif(1,.1,.5),sigS=runif(1,.1,.5),
+           sigD=runif(1,0.1,0.5),sigC=runif(1,.1,.2),sigW=runif(1,.1,.5),
+           psi=runif(1,.6,.9),phi0=runif(1,80,100),
+           theta=runif(1,-.1,.1),Dispers=runif(1,.15,.25))
+    }
+    # List of parameters to monitor:
+    params <- c('theta','sigT','sigD','sigN','sigS','sigC', 'sigW', 
+                'Dispers','peakTemp','psi','phi','Dstrat',
+                'C0','C','Cs','Csite','Dens','DensN','DensA',
+                'Temp','eps') # 
+    #     NOTE: to save "E" matrix, need to run in serial not parallel
+    #           due to memory limitations of parallel
+    # Model to be run:
+    modfile = 'Jags_calls_counts_Q.jags'
+    #
+  }else if(data_opt==2 & prior_opt==2){
+    data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
+                 Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
+                 NWeeks=NWeeks,NTsteps=NTsteps,
+                 moon=Moon,Nstrata=Nstrata,strat=stratnum,
+                 Ncounts=Ncounts,NSiteNoCall=NSiteNoCall,
+                 SiteNC=SiteNC,StratNCnoA=StratNCnoA,
+                 Numweeks=Numweeks,Strtweek=Strtweek,
+                 DensObsNC=DensObsNC,DensObsNCnoA=DensObsNCnoA,
+                 indxS1=indxS1,indxS2=indxS2, Infpriors=Infpriors,
+                 TP=Temppeak,lngthpeak=lngthpeak,TmprlMax=TmprlMax) 
+    # Inits: Best to generate initial values using function
+    inits <- function(){
+      list(Dispers=runif(1,.2,.25))
+    }
+    # List of parameters to monitor:
+    params <- c('theta','sigT','sigD','sigN','sigS','sigC','sigW',  
+                'Dispers','peakTemp','psi','phi','Dstrat',
+                'C0','C','Cs','Csite','Dens','DensN','DensA',
+                'Temp','eps') # 
+    #     NOTE: to save "E" matrix, need to run in serial not parallel
+    #           due to memory limitations of parallel
+    # Model to be run:
+    modfile = 'Jags_calls_counts_infoprior_Q.jags'  
   }
-  # List of parameters to monitor:
-  params <- c('theta','sigT','sigS','sigN','Dispers','peakTemp',
-              'C0','C','Cs','Csite','B','Temp') # 
-  #     NOTE: to save "E" matrix, need to run in serial not parallel
-  #           due to memory limitations of parallel
   
-  # Model to be run:
-  modfile = 'Jags_calls_only.jags'
-}else if(data_opt==1 & prior_opt==2){
-  data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
-               Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
-               NWeeks=NWeeks,NTsteps=NTsteps,
-               moon=Moon,Nstrata=Nstrata,strat=stratnum,
-               lngthpeak=lngthpeak,TP=Temppeak,
-               FS=FS,LA=LA,CL=CL,BU=BU,Bpar1=Bpar1,
-               Bpar2=Bpar2,TmprlMax=TmprlMax,
-               indxS1=indxS1,indxS2=indxS2,
-               Infpriors=Infpriors) 
+}else{
   
-  # Inits: Best to generate initial values using function
-  inits <- function(){
-    list(Dispers=runif(1,.2,.25))
-  }
-  # List of parameters to monitor:
-  params <- c('theta','sigT','sigN','sigS','Dispers','peakTemp',
-              'C0','C','Cs','Csite','B','Temp') # 
-  #     NOTE: to save "E" matrix, need to run in serial not parallel
-  #           due to memory limitations of parallel
+  if (data_opt==1 & prior_opt==1){
+    # Data: A named list of the objects needed by JAGS
+    data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
+                 Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
+                 NWeeks=NWeeks,NTsteps=NTsteps,
+                 moon=Moon,Nstrata=Nstrata,strat=stratnum,
+                 lngthpeak=lngthpeak,TP=Temppeak,
+                 FS=FS,LA=LA,CL=CL,BU=BU,Bpar1=Bpar1,
+                 Bpar2=Bpar2,TmprlMax=TmprlMax,
+                 Numweeks=Numweeks,Strtweek=Strtweek,
+                 indxS1=indxS1,indxS2=indxS2) 
+    
+    # Inits: Best to generate initial values using function
+    inits <- function(){
+      list(sigT=runif(1,0.3,0.6),sigN=runif(1,1,5),sigS=runif(1,2,10),sigW=runif(1,.1,.5),
+           theta=runif(1,-.1,.1),Dispers=runif(1,.15,.25))
+    }
+    # List of parameters to monitor:
+    params <- c('theta','sigT','sigS','sigN','sigW','Dispers','peakTemp',
+                'C0','C','Cs','Csite','B','Temp','eps') # 
+    #     NOTE: to save "E" matrix, need to run in serial not parallel
+    #           due to memory limitations of parallel
+    
+    # Model to be run:
+    modfile = 'Jags_calls_only.jags'
+  }else if(data_opt==1 & prior_opt==2){
+    data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
+                 Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
+                 NWeeks=NWeeks,NTsteps=NTsteps,
+                 moon=Moon,Nstrata=Nstrata,strat=stratnum,
+                 lngthpeak=lngthpeak,TP=Temppeak,
+                 FS=FS,LA=LA,CL=CL,BU=BU,Bpar1=Bpar1,
+                 Bpar2=Bpar2,TmprlMax=TmprlMax,
+                 indxS1=indxS1,indxS2=indxS2,
+                 Numweeks=Numweeks,Strtweek=Strtweek,
+                 Infpriors=Infpriors) 
+    
+    # Inits: Best to generate initial values using function
+    inits <- function(){
+      list(Dispers=runif(1,.2,.25))
+    }
+    # List of parameters to monitor:
+    params <- c('theta','sigT','sigN','sigS','sigW','Dispers','peakTemp',
+                'C0','C','Cs','Csite','B','Temp','eps') # 
+    #     NOTE: to save "E" matrix, need to run in serial not parallel
+    #           due to memory limitations of parallel
+    
+    # Model to be run:
+    modfile = 'Jags_calls_only_infoprior.jags'  
+  }else if(data_opt==2 & prior_opt==1){
+    data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
+                 Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
+                 NWeeks=NWeeks,NTsteps=NTsteps,
+                 moon=Moon,Nstrata=Nstrata,strat=stratnum,
+                 FS=FS,LA=LA,CL=CL,BU=BU,Bpar1=Bpar1,Bpar2=Bpar2,
+                 Ncounts=Ncounts,NSiteNoCall=NSiteNoCall,
+                 SiteNC=SiteNC,StratNCnoA=StratNCnoA,
+                 Numweeks=Numweeks,Strtweek=Strtweek,
+                 DensObsNC=DensObsNC,DensObsNCnoA=DensObsNCnoA,
+                 indxS1=indxS1,indxS2=indxS2, fxnprior=fxnprior,
+                 TP=Temppeak,lngthpeak=lngthpeak,TmprlMax=TmprlMax) 
+    # Inits: Best to generate initial values using function
+    inits <- function(){
+      list(sigT=runif(1,0.3,0.6),sigN=runif(1,.1,.5),sigS=runif(1,.1,.5),
+           sigD=runif(1,0.1,0.5),sigC=runif(1,.1,.2),sigW=runif(1,.1,.5),
+           psi=runif(1,.6,.9),phi0=runif(1,80,100),
+           theta=runif(1,-.1,.1),Dispers=runif(1,.15,.25))
+    }
+    # List of parameters to monitor:
+    params <- c('theta','sigT','sigD','sigN','sigS','sigC','sigW',  
+                'Dispers','peakTemp','psi','phi','Dstrat',
+                'C0','C','Cs','Csite','Dens','DensN','DensA',
+                'B','Temp','eps') # 
+    #     NOTE: to save "E" matrix, need to run in serial not parallel
+    #           due to memory limitations of parallel
+    # Model to be run:
+    modfile = 'Jags_calls_counts.jags'
+    #
+  }else if(data_opt==2 & prior_opt==2){
+    data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
+                 Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
+                 NWeeks=NWeeks,NTsteps=NTsteps,
+                 moon=Moon,Nstrata=Nstrata,strat=stratnum,
+                 FS=FS,LA=LA,CL=CL,BU=BU,Bpar1=Bpar1,Bpar2=Bpar2,
+                 Ncounts=Ncounts,NSiteNoCall=NSiteNoCall,
+                 SiteNC=SiteNC,StratNCnoA=StratNCnoA,
+                 Numweeks=Numweeks,Strtweek=Strtweek,
+                 DensObsNC=DensObsNC,DensObsNCnoA=DensObsNCnoA,
+                 indxS1=indxS1,indxS2=indxS2, Infpriors=Infpriors,
+                 TP=Temppeak,lngthpeak=lngthpeak,TmprlMax=TmprlMax) 
+    # Inits: Best to generate initial values using function
+    inits <- function(){
+      list(Dispers=runif(1,.2,.25))
+    }
+    # List of parameters to monitor:
+    params <- c('theta','sigT','sigD','sigN','sigS','sigC','sigW',  
+                'Dispers','peakTemp','psi','phi','Dstrat',
+                'C0','C','Cs','Csite','Dens','DensN','DensA',
+                'B','Temp','eps') # 
+    #     NOTE: to save "E" matrix, need to run in serial not parallel
+    #           due to memory limitations of parallel
+    # Model to be run:
+    modfile = 'Jags_calls_counts_infoprior.jags'  
+  }  
   
-  # Model to be run:
-  modfile = 'Jags_calls_only_infoprior.jags'  
-}else if(data_opt==2 & prior_opt==1){
-  data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
-               Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
-               NWeeks=NWeeks,NTsteps=NTsteps,
-               moon=Moon,Nstrata=Nstrata,strat=stratnum,
-               FS=FS,LA=LA,CL=CL,BU=BU,Bpar1=Bpar1,Bpar2=Bpar2,
-               Ncounts=Ncounts,NSiteNoCall=NSiteNoCall,
-               SiteNC=SiteNC,StratNCnoA=StratNCnoA,
-               DensObsNC=DensObsNC,DensObsNCnoA=DensObsNCnoA,
-               indxS1=indxS1,indxS2=indxS2, fxnprior=fxnprior,
-               TP=Temppeak,lngthpeak=lngthpeak,TmprlMax=TmprlMax) 
-  # Inits: Best to generate initial values using function
-  inits <- function(){
-    list(sigT=runif(1,0.3,0.6),sigN=runif(1,.1,.5),sigS=runif(1,.1,.5),
-         sigD=runif(1,0.1,0.5),sigC=runif(1,.1,.2),
-         psi=runif(1,.6,.9),phi0=runif(1,80,100),
-         theta=runif(1,-.1,.1),Dispers=runif(1,.15,.25))
-  }
-  # List of parameters to monitor:
-  params <- c('theta','sigT','sigD','sigN','sigS','sigC',  
-              'Dispers','peakTemp','psi','phi','Dstrat',
-              'C0','C','Cs','Csite','Dens','DensN','DensA',
-              'B','Temp') # 
-  #     NOTE: to save "E" matrix, need to run in serial not parallel
-  #           due to memory limitations of parallel
-  # Model to be run:
-  modfile = 'Jags_calls_counts.jags'
-  #
-}else if(data_opt==2 & prior_opt==2){
-  data <- list(Calls=Calls,SiteN=SiteN,Minutes=minutes,
-               Wk=Wk,TS=TS,NObs=NObs,NSite=NSite, 
-               NWeeks=NWeeks,NTsteps=NTsteps,
-               moon=Moon,Nstrata=Nstrata,strat=stratnum,
-               FS=FS,LA=LA,CL=CL,BU=BU,Bpar1=Bpar1,Bpar2=Bpar2,
-               Ncounts=Ncounts,NSiteNoCall=NSiteNoCall,
-               SiteNC=SiteNC,StratNCnoA=StratNCnoA,
-               DensObsNC=DensObsNC,DensObsNCnoA=DensObsNCnoA,
-               indxS1=indxS1,indxS2=indxS2, Infpriors=Infpriors,
-               TP=Temppeak,lngthpeak=lngthpeak,TmprlMax=TmprlMax) 
-  # Inits: Best to generate initial values using function
-  inits <- function(){
-    list(Dispers=runif(1,.2,.25))
-  }
-  # List of parameters to monitor:
-  params <- c('theta','sigT','sigD','sigN','sigS','sigC',  
-              'Dispers','peakTemp','psi','phi','Dstrat',
-              'C0','C','Cs','Csite','Dens','DensN','DensA',
-              'B','Temp') # 
-  #     NOTE: to save "E" matrix, need to run in serial not parallel
-  #           due to memory limitations of parallel
-  # Model to be run:
-  modfile = 'Jags_calls_counts_infoprior.jags'  
 }
-
+  
 # Nsim =  1000  # Total # MCMS sims: Actual saved reps = (Nsim-Nburnin) * (num Cores)
 # Nburnin =  500  # Number of burn-in reps: Actual reps = (Nsim-Nburnin) * (num Cores)
 # Nadapt =  100  # Number of adapting reps, default 100
