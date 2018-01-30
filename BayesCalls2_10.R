@@ -4,28 +4,28 @@
 #  NOTE: this should be sourced from a script file that sets user parameters
 #
 # LOAD NECESSARY LIBRARIES-----------------------------------------
-#existing_Packages<-as.list(installed.packages()[,1])
+existing_Packages<-as.list(installed.packages()[,1])
 # Add new packages you might need to this line, to check if they're installed and install missing packages
-# required_Packages<-c("readxl","lubridate", "stringr", "dplyr", "gtools","rjags","jagsUI","doParallel")
-#missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
-#if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
-# invisible(lapply(required_Packages, require, character.only=T,quietly = T))
+required_Packages<-c("readxl","lubridate", "stringr", "dplyr", "gtools","coda",'lattice','parallel','fitdistrplus',"rjags","jagsUI","doParallel")
+missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
+if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
+invisible(lapply(required_Packages, require, character.only=T,quietly = T))
 #
-#rm(existing_Packages)
-#"readxl","lubridate", "stringr", "dplyr", "gtools","rjags","jagsUI","doParallel"
-library(readxl)
-library(lubridate)
-library(stringr)
-library(gtools)
-library(coda)
-library(lattice)
-library(rjags)
-library(jagsUI)
-library(parallel)
-library(doParallel)
-library(fitdistrplus)
-# install.packages("dplyr", dependencies = TRUE)
-# library(dplyr)
+# #rm(existing_Packages)
+# #"readxl","lubridate", "stringr", "dplyr", "gtools","rjags","jagsUI","doParallel"
+# library(readxl)
+# library(lubridate)
+# library(stringr)
+# library(gtools)
+# library(coda)
+# library(lattice)
+# library(rjags)
+# library(jagsUI)
+# library(parallel)
+# library(doParallel)
+# library(fitdistrplus)
+# # install.packages("dplyr", dependencies = TRUE)
+# # library(dplyr)
 
 # LOAD RAW DATA --------------------------------------------------------------------
 load(loadfile1)
