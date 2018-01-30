@@ -1,65 +1,4 @@
-# Set-up for estimating Calls vs Counts conversion function
-# (allows estimating density from call rate)
-# 
-# NOTE: Assumed that this script is in same directory as Results files
-# USER SPECIFIED PARAMETERS -------------------------------------------------
-# Set root directory path... enter absolute path or relative,
-RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
-AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code is stored
-ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
-DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files stored
-RunFile = 'BayesCallsTrends2_10'       # Plotting Script
-Species =  'WTSH'  # Species name for data analysis
-# Specify results files to be included (one for each year):
-Resultsfiles = c("Results_WTSH_2016_2_10")
-# Specify name of Data file with Areas of each strata
-Countsdatfile = c(paste0('Counts_CapCays_',Species,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
-Areasdatfile = c(paste0('QPWS_CapCays_Strata_Area.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 
-Nchains = 20
-Nburnin =  7000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
-Nadapt =  100  # Number of adapting reps, default 100
-Totalreps = 10000 # Total desired reps (ie # simulations making up posterior)
-
-# END USER SPECIFIED PARAMETERS ---------------------------------------------
-#
-# (Should not need to edit anything below here)
-# 
-# Process Filenames and directory names -------------------------------------
-#
-Nsim =  Totalreps/Nchains + Nburnin  # Total # MCMS sims: Actual saved reps = (Nsim-Nburnin) * (num Cores)
-
-simsamp = 500;
-
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-thisdir = getwd()
-if (RootDir=='current'){
-  RootDir = getwd()
-} else if(RootDir=='above1'){
-  tmp1 = getwd()
-  setwd('..')
-  RootDir = getwd()
-  setwd(tmp1)
-  rm('tmp1')
-} else if(RootDir=='above2'){
-  tmp1 = getwd()
-  setwd('..')
-  setwd('..')
-  RootDir = getwd()
-  setwd(tmp1)
-  rm('tmp1')
-} else {
-  RootDir = RootDir
-}
-
-AnalysisFolder = paste0(RootDir,"/",AnalysisFolder)
-RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
-ResultsFolder = paste0(RootDir,"/",ResultsFolder)
-loadfiles = paste0(ResultsFolder,"/",Resultsfiles,".rdata")
-DataFolder = paste0(RootDir,"/",DataFolder)
-loaddat = paste0(DataFolder,"/",Countsdatfile)
-loadAdat = paste0(DataFolder,"/",Areasdatfile)
-#
 # Load packages ------------------------------------------------------------------
 library(readxl)
 library(lubridate)
@@ -73,6 +12,8 @@ library(jagsUI)
 library(parallel)
 library(doParallel)
 library(fitdistrplus)
+library(ggplot2)
+library(mcmcplots)
 # install.packages("dplyr", dependencies = TRUE)
 # library(dplyr)
 
@@ -87,9 +28,14 @@ StrataNC = as.character(dfC$StrataName)
 StrataNCf = factor(StrataNC)
 YearNest = dfC$contract_year
 Densmeas = dfC$Density
+Monthmeas = month(parse_date_time(as.character(dfC$Count_Date),"mdy"))
+Seasmeas = Seasondefine[Monthmeas]
+Radiusmeas = dfC$Density_Radius
 dfCounts <- data.frame(Year=numeric(),
                  Site=character(), 
                  SiteNC=numeric(), 
+                 Radius = numeric(), 
+                 Season = numeric(), 
                  DensObsNC = numeric(),
                  stringsAsFactors=FALSE) 
 dfCalls <- data.frame(Year=numeric(),
@@ -123,6 +69,8 @@ for (i in 1:Nyrs){
         dfCounts = rbind(dfCounts,data.frame(Year=Yearfocal,
                                              Site=as.character(Sitelist$SPIDc[s]), 
                                              SiteNC=Nst, 
+                                             Season = Seasmeas[j[jj]],
+                                             Radius = Radiusmeas[j[jj]],
                                              DensObsNC = Densmeas[j[jj]],
                                              CRmean = meanCR))
         NCmn[Nst] = mean(Densmeas[j[jj]])
@@ -146,6 +94,11 @@ for (i in 1:Nyrs){
 NSite = Nst
 NObs = dim(dfCalls)[1]
 Ncounts = dim(dfCounts)[1]
+Year = dfCounts$Year - min(dfCounts$Year) + 1
+NYrs = max(Year)
+Radius = dfCounts$Radius/10
+NRads = max(Radius)
+NSeas = max(dfCounts$Season)
 x = CRmn
 y = NCmn
 #x = NCmn
@@ -176,16 +129,18 @@ cores = min(cores, Nchains)
 cl <- makeCluster(cores[1])
 registerDoParallel(cl)
 # Data structure
-data <- list(NObs=NObs,Ncounts=Ncounts,NSite=NSite,
+data <- list(NObs=NObs,Ncounts=Ncounts,NSite=NSite,NYrs=NYrs,
              DensObsNC=pmax(dfCounts$DensObsNC,.001),CR=dfCalls$CR,
              SiteNC=dfCounts$SiteNC,SiteN=dfCalls$SiteN,
-             Vvals=Vvals)
+             Year=Year,Radius=Radius,Season=dfCounts$Season,
+             NRads=NRads,NSeas=NSeas,Vvals=Vvals)
 # Inits: Best to generate initial values using function
 inits <- function(){
-  list(sigC=runif(1,0.05,0.1),sigD=runif(1,0.05,0.1))
+  list(Beta=runif(1,.001,.01))
 }
 # List of parameters to monitor:
-params <- c('sigC','sigD','alpha','beta','Csite','DensN','Dens') 
+params <- c('sigC','sigD','sigR','sigS','sigY','Radeff','Seaseff','Yeareff',
+            'alpha','Beta','Csite','DensN','Dens') 
 # Model to be run:
 modfile = 'Jags_convert_calls_counts.jags'
 #
@@ -206,6 +161,8 @@ out <- jags.basic(data = data,
                   n.thin = 1,
                   parallel=TRUE,
                   n.cores=cores)
+
+
 # Diagnostics -------------------------------------------------------------
 stopCluster(cl)
 vn = varnames(out)
@@ -221,10 +178,23 @@ for (i in 1:(Np-3)){
   parnm = params[i]
   traplot(out,parnm)
 }
-for (i in 1:(Np-3)){
+for (i in 1:5){
   parnm = params[i]
   denplot(out,parnm,ci=.9,collapse = TRUE)
 }
+for (i in 9:10){
+  parnm = params[i]
+  denplot(out,parnm,ci=.9,collapse = TRUE)
+}
+
+denplot(out,"Radeff[2]",ci=.9,collapse = TRUE)
+denplot(out,"Seaseff[2]",ci=.9,collapse = TRUE)
+for (y in 2:NYrs){
+  denplot(out,paste0("Yeareff[",y,"]"),ci=.9,collapse = TRUE)
+}
+
+  
+
 
 # Function plots --------------------------------------------------------
 xx =  s_stats[which(startsWith(vn,'Csite')),1]
@@ -238,7 +208,7 @@ yyH = s_quantiles[which(startsWith(vn,'DensN')),5]
 #fxH = s_quantiles[which(startsWith(vn,'Dens[')),5]
 
 alpha = s_stats[which(vn=='alpha'),1]
-beta = s_stats[which(vn=='beta'),1]  
+beta = s_stats[which(vn=='Beta'),1]  
 sigD = s_stats[which(vn=='sigD'),1]
 Vd = sigD^2
 xi = seq(0.001,30,length.out = 100)
@@ -254,8 +224,8 @@ sig=sqrt(log(1+Vd/yi^2))
 #   fxL[i]=quantile(rlnorm(10000,mu[i],sig[i]),0.025)
 #   fxH[i]=quantile(rlnorm(10000,mu[i],sig[i]),0.975)
 # }
-fxL=qlnorm(0.0275,mu,sig)
-fxH=qlnorm(0.975,mu,sig)
+fxL=qlnorm(0.05,mu,sig)
+fxH=qlnorm(0.95,mu,sig)
 
 dfSites = data.frame(xx=xx,yy=yy,xxL=xxL,xxH=xxH,yyL=yyL,yyH=yyH,xobs=CRmn,
                      yobs=NCmn)
@@ -263,6 +233,7 @@ dfFxn = data.frame(xi=xi,yi=yi,fxL=fxL,fxH=fxH)
 
 ggplot()+
   geom_ribbon(data=dfFxn,aes(ymin=fxL, ymax=fxH, x=xi), alpha = 0.3)+
+  geom_line(data=dfFxn,aes(x=xi, y=yi))+
   geom_point(data=dfSites,aes(x=xx,y=yy,size=1))+
   geom_point(data=dfCounts,aes(x=CRmean,y=DensObsNC, colour = "red"))+
   geom_errorbar(data=dfSites,aes(x=xx,ymax=yyH,ymin=yyL,width=0))+
@@ -270,4 +241,4 @@ ggplot()+
   xlab("Call Rate") + ylab("Nest Density") +
   theme(legend.position='none')
 
-
+save(list = ls(all.names = TRUE),file=SaveResults)

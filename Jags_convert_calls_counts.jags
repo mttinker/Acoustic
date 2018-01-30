@@ -4,17 +4,48 @@ model{
 # alpha param, intercept for density-call rate fxn
 alpha ~ dgamma(.1,.1) 
 # beta param, determines slope for density-call rate fxn
-beta ~ dgamma(.1,.1)     
+Beta ~ dgamma(.1,.1)     
 #
-sigC ~ dunif(0.001,50) # variance in sequential nest counts at a site
-sigD ~  dunif(0.001,50) # variance in density estimation function
+# Option 1: uniform priors on log(sigma^2)... upper bound is thus log(max possible)
+# logvarC ~ dunif(-13,log(.75^2))
+# logvarD ~ dunif(-13,log(.75^2))
+# logvarR ~ dunif(-9,log(2^2))
+# logvarS ~ dunif(-9,log(2^2))
+# logvarY ~ dunif(-9,log(2^2))
+# sigC <- sqrt(exp(logvarC)) # variance in sequential nest counts at a site
+# sigD <- sqrt(exp(logvarD)) # variance in density estimation function
+# sigR <- sqrt(exp(logvarR)) # variance in nest counts due to radius 
+# sigS <- sqrt(exp(logvarS)) # variance in nest counts due to season 
+# sigY <- sqrt(exp(logvarY)) # variance in nest counts due to year 
+#
+# Half Cauchy for variance prior: second param is tau, 1/expected mean variance
+sigC ~ dt(0, 25 ,1)T(0,)
+sigD ~ dt(0, 25 ,1)T(0,)
+sigR ~ dt(0, 5 ,1)T(0,)
+sigS ~ dt(0, 5 ,1)T(0,)
+sigY ~ dt(0, 5 ,1)T(0,)
 Vc <- sigC^2
 Vd <- sigD^2 
+tauR <- 1/sigR^2 
+tauS <- 1/sigS^2 
+tauY <- 1/sigY^2 
 ## Mean call rate (Csite) and estimated densities by site 
+Radeff[1] <- 0
+for (r in 2:NRads){
+	Radeff[r] ~ dnorm(0,tauR) 
+}
+Seaseff[1] <- 0
+for (s in 2:NSeas){
+	Seaseff[s] ~ dnorm(0,tauS) 
+}
+Yeareff[1] <- 0
+for (y in 2:NYrs){
+	Yeareff[y] ~ dnorm(0,tauY) 
+}
 for (i in 1:NSite){    
 	# Mean estimated TRUE call rate by site:
 	Csite[i] ~ dunif(0.0001,100) 
-	Dens[i] <- alpha+Csite[i]*beta # Mean expected density, deterministic
+	Dens[i] <- alpha+Csite[i]*Beta # Mean expected density, deterministic
 	# Dens[i] <- alpha*Csite[i]^beta # Mean expected density, deterministic
 	muD[i] <- log(Dens[i]/sqrt(1+Vd/Dens[i]^2))
 	tauD[i] <- 1/(log(1+ Vd/Dens[i]^2))
@@ -23,8 +54,9 @@ for (i in 1:NSite){
 # OBSERVED DATA
 # Cycle through nest count data
 for (n in 1:Ncounts){
-	muNC[n] <- log(DensN[SiteNC[n]]/sqrt(1+Vc/DensN[SiteNC[n]]^2))
-	tauNC[n] <- 1/(log(1+ Vc/DensN[SiteNC[n]]^2))
+	DensNi[n] <- exp(log(DensN[SiteNC[n]]) + Radeff[Radius[n]] + Seaseff[Season[n]] + Yeareff[Year[n]])
+	muNC[n] <- log(DensNi[n]/sqrt(1+Vc/DensNi[n]^2))
+	tauNC[n] <- 1/(log(1+ Vc/DensNi[n]^2))
 	DensObsNC[n] ~ dlnorm(muNC[n],tauNC[n])		
 }
 # Cycle through posterior samples of call rate 
