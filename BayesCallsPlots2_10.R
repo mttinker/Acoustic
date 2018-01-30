@@ -1,24 +1,16 @@
 # Program Summary ---------------------------------------------------------
 # Script to examine analyis results from a Bayesian Analysis of
 #  acoustic data on seabird calls
-# PROMPT USER FOR RESULTS FILE TO LOAD (CHOOSE RDATA FILE)
-# library(tcltk2)
-# tk_choose.files
-# Filters <- matrix(c("R data file", ".Rdata"),
-#                   1, 2, byrow = TRUE)
-# loadname = tk_choose.files(filter = Filters)
-# rm('Filters')
-# Set other variables
+#
 simsamp = 1000;
 # 
 # Load necessary libraries (may need to install some of these)
 library(coda)
 library(mcmcplots)
 library(rjags)
-#library(R2jags)
-#library(jagsUI)
 library(Matrix)
 library(matrixStats)
+library(mvtnorm)
 library(Hmisc)
 library(ggplot2)
 library(lubridate)
@@ -35,6 +27,11 @@ FYear = Yearfocal
 startday = DayOfYear_strt
 pathout = paste0(ResultsFolder,"/",species,"_summaries/")
 
+attach(loadfile2); 
+Convfxn = Convertfxn
+Convplot = Convertplot
+detach(paste0('file:',loadfile2),character.only = TRUE)
+
 # Diagnostic Plots ------------------------------------------------------------------
 
 pfp = c(which(params=='theta'),which(startsWith(params,'sig')),which(params=='Dispers'),
@@ -47,7 +44,6 @@ for (i in pfp){
   denplot(out,parnm,ci=.9,collapse = TRUE)
 }
 
-
 # Caterpiller plot for Strata  ----------------------------------------
 stratparnum = which(params=='C')
 labelsstrat = Stratalist$StratName
@@ -56,17 +52,17 @@ caterplot(out,params[stratparnum],denstrip = FALSE, reorder=FALSE,
           labels=labelsstrat, labels.loc = 'above',las = 0, cex.labels = .8)
           title(main = "Mean Call Rate by Strata", font.main = 4)
 #
-if (data_opt==2){
-  stratparnum = which(params=='Dstrat')
-  labelsstrat = Stratalist$StratName
-  caterplot(out,params[stratparnum],denstrip = FALSE, reorder=FALSE,
-            quantiles=list(outer=c(0.025,0.975),inner=c(0.1666,0.8333)),lwd=c(.1,4),
-            labels=labelsstrat, labels.loc = 'above',las = 0, cex.labels = .8)
-  title(main = "Mean Density by Strata", font.main = 4)
-}          
-          
+# if (data_opt==2){
+#   stratparnum = which(params=='Dstrat')
+#   labelsstrat = Stratalist$StratName
+#   caterplot(out,params[stratparnum],denstrip = FALSE, reorder=FALSE,
+#             quantiles=list(outer=c(0.025,0.975),inner=c(0.1666,0.8333)),lwd=c(.1,4),
+#             labels=labelsstrat, labels.loc = 'above',las = 0, cex.labels = .8)
+#   title(main = "Mean Density by Strata", font.main = 4)
+# }          
+#           
 #          
-# Caterpiller plot for sites in select strata  ----------------------------------------
+# Caterpiller plot for sites, by strata  ----------------------------------------
 siteparnum = which(params=='Cs')
 stratlist <- Stratalist$StratName
 for (sn in 1:length(stratlist)){
@@ -257,150 +253,69 @@ plt1 = ggplot(dfFSites, aes(x = Site, y = Mean)) +
 print(plt1)
 
 # Plot Estimated Call rate and abundance by strata and Island ----------------------
-#
-# Plots of density and abundance, if data_opt = 2
-if (data_opt==2){
-  repvec = seq(1,simsamp)
-  dfStrat = data.frame(Rep = repvec,Strata = Stratalist$StratName[1],
-                       Island = Stratalist$IslName[1],
-                       CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[1],']')],
-                       Density = post[,vn==paste0('Dstrat[', Stratalist$Stratnum[1],']')],
-                       Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[1])])
-  dfStrat$Total = dfStrat$Density*dfStrat$Area
-  for (i in 2:Nstrata){
-    tmp = data.frame(Rep = repvec,Strata = Stratalist$StratName[i],
-                     Island = Stratalist$IslName[i],
-                     CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[i],']')],
-                     Density = post[,vn==paste0('Dstrat[', Stratalist$Stratnum[i],']')],
-                     Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[i])])
-    tmp$Total = tmp$Density*tmp$Area
-    dfStrat = rbind(dfStrat,tmp)
-  }
-  
-  plt2 = ggplot(dfStrat, aes(x=Strata, y=CallRate)) +
-    geom_boxplot(fill = "light blue", colour = "black",
-                 alpha = 0.7) +
-    scale_y_continuous(name = "Mean Expected Call Rate") +
-    scale_x_discrete(name = "Strata") +
-    ggtitle(paste0("Estimated Peak Call Rates by Strata, ", Yearfocal)) +
-    theme(axis.text.x=element_text(angle=45,hjust=1)) 
-  print(plt2)
-  
-  plt3 = ggplot(dfStrat, aes(x=Strata, y=Density)) +
-    geom_boxplot(fill = "light blue", colour = "black",
-                 alpha = 0.7) +
-    # coord_trans(y = "log2") +
-    coord_cartesian(ylim = c(0,0.5)) +
-    scale_y_continuous(name = "Mean Expected Density") +
-    scale_x_discrete(name = "Strata") +
-    ggtitle(paste0("Estimated Density by Strata, ", Yearfocal)) +
-    theme(axis.text.x=element_text(angle=45,hjust=1)) 
-  print(plt3)
-  
-  plt4 = ggplot(dfStrat, aes(x=Strata, y=Total)) +
-    geom_boxplot(fill = "light blue", colour = "black",
-                 alpha = 0.7) +
-    # coord_trans(y = "log2") +
-    coord_cartesian(ylim = c(0,1.05*as.numeric(quantile(dfStrat$Total,.99)))) +
-    scale_y_continuous(name = "Mean Expected Abundance",labels = scales::comma) +
-    scale_x_discrete(name = "Strata") +
-    ggtitle(paste0("Estimated Abundance by Strata, ", Yearfocal)) +
-    theme(axis.text.x=element_text(angle=45,hjust=1)) 
-  print(plt4)
-  # 
-  # Boxplot of total abundance by Islands 
-  NumI = length(unique(Stratalist$IslName))
-  dfIsl = dcast(dfStrat[,c(1,2,3,7)],Island + Rep ~ Strata)
-  dfIsl$Total = apply(dfIsl[3:dim(dfIsl)[2]],1,sum,na.rm=TRUE)
-  plt5 = ggplot(dfIsl, aes(x=Island, y=Total)) +
-    geom_boxplot(fill = "light blue", colour = "black",
-                 alpha = 0.7) +
-    # coord_trans(y = "log2") +
-    coord_cartesian(ylim = c(0,1.05*as.numeric(quantile(dfIsl$Total,.985)))) +
-    scale_y_continuous(name = "Mean Expected Abundance",labels = scales::comma) +
-    scale_x_discrete(name = "Island") +
-    ggtitle(paste0("Estimated Abundance by Islands, ", Yearfocal)) +
-    theme(axis.text.x=element_text(angle=45,hjust=1)) 
-  print(plt5)
-  
+# Call rate vs Nest Counts
+print(Convplot)
+# Abundance calculations using conversion function (with uncertainty)
+AB = rmvnorm(n=simsamp, mean=Convfxn$means, sigma=Convfxn$covmat)
+alph = AB[,1]; Beta = AB[,2]; rm(AB)
+repvec = seq(1,simsamp)
+dfStrat = data.frame(Rep = repvec,Strata = Stratalist$StratName[1],
+                     Island = Stratalist$IslName[1],
+                     CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[1],']')],
+                     Density = alph + Beta*post[,vn==paste0('C[', Stratalist$Stratnum[1],']')],
+                     Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[1])])
+dfStrat$Total = dfStrat$Density*dfStrat$Area
+for (i in 2:Nstrata){
+  tmp = data.frame(Rep = repvec,Strata = Stratalist$StratName[i],
+                   Island = Stratalist$IslName[i],
+                   CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[i],']')],
+                   Density = alph + Beta*post[,vn==paste0('C[', Stratalist$Stratnum[i],']')],
+                   Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[i])])
+  tmp$Total = tmp$Density*tmp$Area
+  dfStrat = rbind(dfStrat,tmp)
 }
-# Call rate vs Nest Counts---------------------------------------------
 
-# Plots of call rates vs nest density counts, if data_opt = 2
-#  AND if there are at least some nest counts for this year
-if (data_opt==2 & length(SwCN>0)){
-  # Plot of call rate vs nest counts (at half moon and peak time, 95% of max call rate)
-  NCsite = length(SwCN)
-  DensEst = numeric(length = NCsite)
-  DensEstNC = numeric(length = NCsite)
-  DensEstAC = numeric(length = NCsite)
-  CPMest = numeric(length = NCsite)
-  DensEst_Lo = numeric(length = NCsite)
-  DensEstNC_Lo = numeric(length = NCsite)
-  DensEstAC_Lo = numeric(length = NCsite)
-  CPMest_Lo = numeric(length = NCsite)
-  DensEst_Hi = numeric(length = NCsite)
-  DensEstNC_Hi = numeric(length = NCsite)
-  DensEstAC_Hi = numeric(length = NCsite)
-  CPMest_Hi = numeric(length = NCsite)
-  for (i in 1:NCsite){
-    ii = SwCN[i]
-    DensEst[i] = s_stats[which(vn==paste0("Dens[",ii,"]")),1]
-    DensEstNC[i] = s_stats[which(vn==paste0("DensN[",ii,"]")),1]
-    DensEstAC[i] = s_stats[which(vn==paste0("DensA[",ii,"]")),1]
-    CPMest[i] = s_stats[which(vn==paste0("Csite[",ii,"]")),1]
-    DensEst_Lo[i] = s_quantiles[which(vn==paste0("Dens[",ii,"]")),1]
-    DensEstNC_Lo[i] = s_quantiles[which(vn==paste0("DensN[",ii,"]")),1]
-    DensEstAC_Lo[i] = s_quantiles[which(vn==paste0("DensA[",ii,"]")),1]
-    CPMest_Lo[i] = s_quantiles[which(vn==paste0("Csite[",ii,"]")),1]    
-    DensEst_Hi[i] = s_quantiles[which(vn==paste0("Dens[",ii,"]")),5]
-    DensEstNC_Hi[i] = s_quantiles[which(vn==paste0("DensN[",ii,"]")),5]
-    DensEstAC_Hi[i] = s_quantiles[which(vn==paste0("DensA[",ii,"]")),5]
-    CPMest_Hi[i] = s_quantiles[which(vn==paste0("Csite[",ii,"]")),5]       
-  }
-  dfCvD = data.frame(Site = Sitelist$SPIDc[SwCN],Year = Yearfocal,
-                     DensEst=DensEst,DensEstNC=DensEstNC,
-                     DensEstAC=DensEstAC,CPMest=CPMest,
-                     DensEst_Lo=DensEst_Lo,DensEstNC_Lo=DensEstNC_Lo,
-                     DensEstAC_Lo=DensEstAC_Lo,CPMest_Lo=CPMest_Lo,
-                     DensEst_Hi=DensEst_Hi,DensEstNC_Hi=DensEstNC_Hi,
-                     DensEstAC_Hi=DensEstAC_Hi,CPMest_Hi=CPMest_Hi)
-  dfCvD_lng = melt(dfCvD, id.vars = c("Site","DensEst"),
-                   measure.vars = c("DensEstNC","DensEstAC"))
-  
-  p1 <- ggplot(dfCvD_lng, aes(x = DensEst,y=value))+
-    geom_point(aes(group = variable, color = variable)) +
-    labs(x="True Nest Density", y = "Estimated Density") +
-    scale_colour_manual(labels = c("Nest Counts", "Acoustic data"),
-        name = "Estimate type", values=c("red","blue"))
-  print(p1)
-  
-  # Plot Call rate vs Density fxn
-  maxdns = ceiling(10*max(dfCvD$DensEst))/10
-  x = seq(0,maxdns,by = .01)
-  y = numeric(length = length(x))
-  low = numeric(length = length(x))
-  hi = numeric(length = length(x))
-  for (i in 1:length(x)){
-    dat = outdf[,which(vn=='phi')]*x[i]^outdf[,which(vn=='psi')] 
-    y[i] = mean(dat)
-    low[i] = quantile(dat,0.025)
-    hi[i] = quantile(dat,0.975)
-  }
-  dfFxn = data.frame(Density = x,Mean=y,CI_Low=low,CI_high=hi)
-  p2 = ggplot() +
-    geom_point(data = dfCvD, aes(x=DensEstNC,y=CPMest), colour = "red") + 
-    geom_errorbar(data = dfCvD, aes(x=DensEstNC, 
-                                    ymin=CPMest_Lo, ymax=CPMest_Hi), width=.01) +
-    labs(x="Mean Nest Density", y = "Estimated Call Rate")
-  print(p2)  
-  p3 = ggplot() +
-      geom_ribbon(data = dfFxn, aes(x=Density, ymin=CI_Low, ymax=CI_high), 
-                  fill = "grey70") +
-      geom_line(data = dfFxn, aes(x=Density, y=Mean),colour = "blue") +
-      geom_point(data = dfCvD, aes(x=DensEst,y=CPMest), colour = "red") + 
-      geom_errorbar(data = dfCvD, aes(x=DensEst, 
-            ymin=CPMest_Lo, ymax=CPMest_Hi), width=.01) +
-      labs(x="Estimated True Density", y = "Estimated Call Rate")
-  print(p3)
- }
+plt2 = ggplot(dfStrat, aes(x=Strata, y=CallRate)) +
+  geom_boxplot(fill = "light blue", colour = "black",
+               alpha = 0.7) +
+  scale_y_continuous(name = "Mean Expected Call Rate") +
+  scale_x_discrete(name = "Strata") +
+  ggtitle(paste0("Estimated Peak Call Rates by Strata, ", Yearfocal)) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) 
+print(plt2)
+
+plt3 = ggplot(dfStrat, aes(x=Strata, y=Density)) +
+  geom_boxplot(fill = "light blue", colour = "black",
+               alpha = 0.7) +
+  # coord_trans(y = "log2") +
+  coord_cartesian(ylim = c(0,0.5)) +
+  scale_y_continuous(name = "Mean Expected Density") +
+  scale_x_discrete(name = "Strata") +
+  ggtitle(paste0("Estimated Density by Strata, ", Yearfocal)) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) 
+print(plt3)
+
+plt4 = ggplot(dfStrat, aes(x=Strata, y=Total)) +
+  geom_boxplot(fill = "light blue", colour = "black",
+               alpha = 0.7) +
+  # coord_trans(y = "log2") +
+  coord_cartesian(ylim = c(0,1.05*as.numeric(quantile(dfStrat$Total,.99)))) +
+  scale_y_continuous(name = "Mean Expected Abundance",labels = scales::comma) +
+  scale_x_discrete(name = "Strata") +
+  ggtitle(paste0("Estimated Abundance by Strata, ", Yearfocal)) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) 
+print(plt4)
+
+NumI = length(unique(Stratalist$IslName))
+dfIsl = dcast(dfStrat[,c(1,2,3,7)],Island + Rep ~ Strata)
+dfIsl$Total = apply(dfIsl[3:dim(dfIsl)[2]],1,sum,na.rm=TRUE)
+plt5 = ggplot(dfIsl, aes(x=Island, y=Total)) +
+  geom_boxplot(fill = "light blue", colour = "black",
+               alpha = 0.7) +
+  # coord_trans(y = "log2") +
+  coord_cartesian(ylim = c(0,1.05*as.numeric(quantile(dfIsl$Total,.985)))) +
+  scale_y_continuous(name = "Mean Expected Abundance",labels = scales::comma) +
+  scale_x_discrete(name = "Island") +
+  ggtitle(paste0("Estimated Abundance by Islands, ", Yearfocal)) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) 
+print(plt5)

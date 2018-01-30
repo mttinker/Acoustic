@@ -2,7 +2,7 @@
 # Purpose of this file is for user to specify parameters needed for plotting results
 # NOTE: Assumed that this script is in same directory as Results file
 # USER SPECIFIED PARAMETERS -------------------------------------------------
-Resultsfile = "Results_WTSH_2014_2_10"
+Resultsfile = "Results_WTSH_2016_2_10"
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
 # Set root directory path... enter absolute path or relative,
 RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
@@ -17,13 +17,14 @@ Site_focal[1] = 'NW2'  # Site name for detailed plots
 Site_focal[2] = 'NW3'  # Site name for detailed plots
 Site_focal[3] = 'NW4'  # Site name for detailed plots
 # Define focal period of interest
-DateFocalStrt = "April 1"
-DateFocalStop = "April 28"
+DateFocalStrt = "February 19"
+DateFocalStop = "April 19"
 TimeFocalStrt = -120  # Time boundary 1, minutes relative to a reference event (sunrise or sunset)
 TimeFocalStop =  -60  # Time boundary 2, always > than boundary1 (minutes relative to event) 
 Time_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise
 # Specify name of Data file with Areas of each strata
-Areasdatfile = c(paste0('QPWS_CapCays_Strata_Area.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+Convertfile = 'WTSH_CallsCountsFxn2_10'
+Areasdatfile = 'QPWS_CapCays_Strata_Area.csv' # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 
 # END USER SPECIFIED PARAMETERS ---------------------------------------------
 #
@@ -56,8 +57,9 @@ RunFile = paste0(RootDir,"/",AnalysisFolder,"/",RunFile,".r")
 ResultsFolder = paste0(RootDir,"/",ResultsFolder)
 DataFolder = paste0(RootDir,"/",DataFolder)
 Areasdatfile = paste0(DataFolder,"/",Areasdatfile)
-
 loadfile1 = paste0(ResultsFolder,"/",Resultsfile,".rdata")
+loadfile2 = paste0(ResultsFolder,"/",Convertfile,".rdata")
+
 rm(thisdir)
 #
 source(RunFile)

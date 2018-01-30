@@ -193,8 +193,6 @@ for (y in 2:NYrs){
   denplot(out,paste0("Yeareff[",y,"]"),ci=.9,collapse = TRUE)
 }
 
-  
-
 
 # Function plots --------------------------------------------------------
 xx =  s_stats[which(startsWith(vn,'Csite')),1]
@@ -207,32 +205,37 @@ xxH =  s_quantiles[which(startsWith(vn,'Csite')),5]
 yyH = s_quantiles[which(startsWith(vn,'DensN')),5]
 #fxH = s_quantiles[which(startsWith(vn,'Dens[')),5]
 
+a_post = outdf$alpha
+b_post = outdf$Beta
+
+
+  
 alpha = s_stats[which(vn=='alpha'),1]
-beta = s_stats[which(vn=='Beta'),1]  
+Beta = s_stats[which(vn=='Beta'),1]  
 sigD = s_stats[which(vn=='sigD'),1]
+Convertfxn = list(means = c(alpha,Beta), covmat = cov(cbind(a_post,b_post)))
 Vd = sigD^2
 xi = seq(0.001,30,length.out = 100)
 # yi = alpha*xi^beta
-yi = alpha+xi*beta
-
+yi = alpha+xi*Beta
+fxL = numeric(length=100)
+fxH = numeric(length=100)
+for(i in 1:100){
+  fxL[i] = quantile(a_post+xi[i]*b_post,0.025)
+  fxH[i] = quantile(a_post+xi[i]*b_post,0.975)
+}
 mu = log(yi/sqrt(1+Vd/yi^2))
 sig=sqrt(log(1+Vd/yi^2))
-
-# fxL=numeric()
-# fxH=numeric()
-# for (i in 1:length(xi)){
-#   fxL[i]=quantile(rlnorm(10000,mu[i],sig[i]),0.025)
-#   fxH[i]=quantile(rlnorm(10000,mu[i],sig[i]),0.975)
-# }
-fxL=qlnorm(0.05,mu,sig)
-fxH=qlnorm(0.95,mu,sig)
+pxL=qlnorm(0.05,mu,sig)
+pxH=qlnorm(0.95,mu,sig)
 
 dfSites = data.frame(xx=xx,yy=yy,xxL=xxL,xxH=xxH,yyL=yyL,yyH=yyH,xobs=CRmn,
                      yobs=NCmn)
-dfFxn = data.frame(xi=xi,yi=yi,fxL=fxL,fxH=fxH)
+dfFxn = data.frame(xi=xi,yi=yi,fxL=fxL,fxH=fxH,pxL=pxL,pxH=pxH)
 
-ggplot()+
-  geom_ribbon(data=dfFxn,aes(ymin=fxL, ymax=fxH, x=xi), alpha = 0.3)+
+Convertplot = ggplot()+
+  geom_ribbon(data=dfFxn,aes(ymin=pxL, ymax=pxH, x=xi), alpha = 0.15)+
+  geom_ribbon(data=dfFxn,aes(ymin=fxL, ymax=fxH, x=xi), alpha = 0.25)+
   geom_line(data=dfFxn,aes(x=xi, y=yi))+
   geom_point(data=dfSites,aes(x=xx,y=yy,size=1))+
   geom_point(data=dfCounts,aes(x=CRmean,y=DensObsNC, colour = "red"))+
@@ -240,5 +243,5 @@ ggplot()+
   geom_errorbarh(data=dfSites,aes(x=xx,y=yy,xmax=xxH,xmin=xxL))+
   xlab("Call Rate") + ylab("Nest Density") +
   theme(legend.position='none')
-
+print(Convertplot)
 save(list = ls(all.names = TRUE),file=SaveResults)
