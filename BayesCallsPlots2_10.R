@@ -19,6 +19,7 @@ library(gtools)
 library(lattice)
 library(reshape2)
 library(grid)
+
 # Load Data ---------------------------------------------------------------
 load(loadfile1)
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
@@ -274,6 +275,11 @@ for (i in 2:Nstrata){
   tmp$Total = tmp$Density*tmp$Area
   dfStrat = rbind(dfStrat,tmp)
 }
+
+source(paste0(AnalysisFolder,"/summarySE.R")) 
+sumtab = summarySE(dfStrat, measurevar="Total", groupvars=c("Strata"))  
+print("Summary of Abundance by Strata:")
+print(sumtab)
 
 plt2 = ggplot(dfStrat, aes(x=Strata, y=CallRate)) +
   geom_boxplot(fill = "light blue", colour = "black",

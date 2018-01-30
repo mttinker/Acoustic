@@ -8,13 +8,11 @@ AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code i
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
 RunFile = 'BayesCallsTrends2_10'       # Plotting Script
 # Specify results files to be included (one for each year):
-Resultsfiles = c("Results_WTSH_2014_2_10",
-                 "Results_WTSH_2015_2_10",
-                 "Results_WTSH_2016_2_10",
+Resultsfiles = c("Results_WTSH_2016_2_10",
                  "Results_WTSH_2017_2_10")
 # Specify focal strata for estimating trends: 
 #  NOTE: these strata must be present in each years data!!
-Strata_trends = c('North West Pisonia')
+Strata_trends = c('North West Pisonia','North West Fringe')
 # Can either estimate density for all sites each year (FocalSites = 0)
 #  OR for a select sequence of sites present each year (FocalSites = 1)
 FocalSites = 0
@@ -27,7 +25,7 @@ DataFolder = 'CapCays/data'
 Convertfile = 'WTSH_CallsCountsFxn2_10' # Results file with conversion function
 # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 Areasdatfile = 'QPWS_CapCays_Strata_Area.csv' 
-Trendtype = 1 # If type = 1, calculate trend for call rate, if 2 calculate for density/abundance
+Trendtype = 1 # If type = 1, calculate trend for call rate, if 2 calculate for density
 Nchains = 20
 Nburnin =  5000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
 Nadapt =  100  # Number of adapting reps, default 100

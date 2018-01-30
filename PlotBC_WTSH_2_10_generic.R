@@ -2,7 +2,7 @@
 # Purpose of this file is for user to specify parameters needed for plotting results
 # NOTE: Assumed that this script is in same directory as Results file
 # USER SPECIFIED PARAMETERS -------------------------------------------------
-Resultsfile = "Results_WTSH_2016_2_10"
+Resultsfile = "Results_WTSH_2017_2_10"
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
 # Set root directory path... enter absolute path or relative,
 RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
@@ -22,7 +22,7 @@ DateFocalStop = "April 19"
 TimeFocalStrt = -120  # Time boundary 1, minutes relative to a reference event (sunrise or sunset)
 TimeFocalStop =  -60  # Time boundary 2, always > than boundary1 (minutes relative to event) 
 Time_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise
-# Specify name of Data file with Areas of each strata
+# Specify name of Data files with Conversion function and Areas of each strata
 Convertfile = 'WTSH_CallsCountsFxn2_10'
 Areasdatfile = 'QPWS_CapCays_Strata_Area.csv' # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 

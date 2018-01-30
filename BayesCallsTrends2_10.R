@@ -15,7 +15,16 @@ library(grid)
 library(ggplot2)
 library(doParallel)
 # Load Data ---------------------------------------------------------------
+dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
+attach(loadfile2); 
+Convfxn = Convertfxn
+Convplot = Convertplot
+detach(paste0('file:',loadfile2),character.only = TRUE)
+AB = rmvnorm(n=simsamp, mean=Convfxn$means, sigma=Convfxn$covmat)
+alph = AB[,1]; Beta = AB[,2]; rm(AB)
+alphMN = Convfxn$means[1]; BetaMN = Convfxn$means[2]
 
+#
 Nyrs = length(loadfiles)
 Nstrat = length(Strata_trends)
 Nobs = simsamp*Nyrs*Nstrat
@@ -24,6 +33,8 @@ YearN = numeric(length = Nobs)
 Strat = character(length = Nobs)
 StratN = numeric(length = Nobs)
 CR = numeric(length = Nobs)
+DNS = numeric(length = Nobs)
+ABND = numeric(length = Nobs)
 for (i in 1:Nyrs){
   attach(loadfiles[i]); 
   outdf <- outdf;
@@ -46,6 +57,9 @@ for (i in 1:Nyrs){
       }
       sitereps = sitereps[,-1]
       CR[idx] = rowMeans(sitereps)
+      DNS[idx] = alph + Beta*CR[idx]
+      Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Strata_trends[s])]
+      ABND[idx] = DNS[idx]*Area
       Year[idx] = rep(Yearfocal,simsamp)
       Strat[idx] = rep(Strata_trends[s],simsamp)
       YearN[idx] = rep(i,simsamp)
@@ -64,6 +78,9 @@ for (i in 1:Nyrs){
       }else{
         CR[idx] = sample(outdf[,which(vn=='C')],simsamp)
       }
+      DNS[idx] = alph + Beta*CR[idx]
+      Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Strata_trends[s])]
+      ABND[idx] = DNS[idx]*Area      
     }
   }
   rm(outdf)
@@ -72,27 +89,45 @@ for (i in 1:Nyrs){
   rm(Yearfocal)
   rm(vn)
 }
-dfT = data.frame(Year=Year,Strata=Strat,YearN=YearN,StratN=StratN,CR=CR)
+dfT = data.frame(Year=Year,Strata=Strat,YearN=YearN,StratN=StratN,CR=CR,DNS=DNS,ABND=ABND)
 Yearvals = sort(unique(dfT$Year))
   
 # Examine data ---------------------------------------------------------
 
 pl1 = ggplot(data=dfT) + 
   geom_boxplot( aes(x=factor(YearN), y=CR, fill=factor(Strata)), position=position_dodge(1)) +
-  scale_x_discrete(breaks=seq(1,Nyrs), labels=as.character(unique(Year)))
+  scale_x_discrete(breaks=seq(1,Nyrs), labels=as.character(unique(Year))) + ylab("Call Rate")
 print(pl1)
+
+pl1b = ggplot(data=dfT) + 
+  geom_boxplot( aes(x=factor(YearN), y=DNS, fill=factor(Strata)), position=position_dodge(1)) +
+  scale_x_discrete(breaks=seq(1,Nyrs), labels=as.character(unique(Year))) + ylab("Mean Density")
+print(pl1b)
+
+pl1c = ggplot(data=dfT) + 
+  geom_boxplot( aes(x=factor(YearN), y=ABND, fill=factor(Strata)), position=position_dodge(1)) +
+  scale_x_discrete(breaks=seq(1,Nyrs), labels=as.character(unique(Year))) + ylab("Abundance")
+print(pl1c)
+
 # Process data for analysys --------------------------------------------
 setwd(AnalysisFolder)
 
 TauVals = matrix(nrow = Nyrs, ncol = Nstrat)
 Vvals = matrix(nrow = Nyrs, ncol = Nstrat)
 Cmean = matrix(nrow = Nyrs, ncol = Nstrat)
+Dmean = matrix(nrow = Nyrs, ncol = Nstrat)
 rhat =  matrix(nrow = Nyrs-1, ncol = Nstrat)
 for (i in 1:Nyrs){
   for (j in 1:Nstrat){
-    TauVals[i,j] = 1/var(CR[YearN==i & StratN==j])
-    Vvals[i,j] = var(CR[YearN==i & StratN==j])
+    if (Trendtype==1){
+      stattmp = CR[YearN==i & StratN==j]
+    }else{
+      stattmp = DNS[YearN==i & StratN==j]
+    }
+    TauVals[i,j] = 1/var(stattmp)
+    Vvals[i,j] = var(stattmp)
     Cmean[i,j] = mean(CR[YearN==i & StratN==j])
+    Dmean[i,j] = alphMN + BetaMN*Cmean[i,j]
     if(i>1){
       rhat[i-1,j] = log(Cmean[i,j]/Cmean[i-1,j])
     }
@@ -106,9 +141,16 @@ cores = min(cores, Nchains)
 cl <- makeCluster(cores[1])
 registerDoParallel(cl)
 # Data structure
-data <- list(CR=CR,Nobs=Nobs,Nyrs=Nyrs,Nstrat=Nstrat,
+if (Trendtype==1){
+  stattmp = CR
+  statmn = Cmean
+}else{
+  stattmp = DNS
+  statmn = Dmean
+}
+data <- list(CR=stattmp,Nobs=Nobs,Nyrs=Nyrs,Nstrat=Nstrat,
              YearN=YearN,StratN=StratN,Vvals=Vvals,
-             Cmean=Cmean,TauVals=TauVals) 
+             Cmean=statmn,TauVals=TauVals) 
 
 # Inits: Best to generate initial values using function
 inits <- function(){
