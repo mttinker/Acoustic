@@ -8,7 +8,6 @@ rm(list = ls())
 gc()
 
 existing_Packages<-as.list(installed.packages()[,1])
-# Add new packages you might need to this line, to check if they're installed and install missing packages
 required_Packages<-c("rstudioapi")
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
@@ -18,6 +17,12 @@ start.time <- Sys.time()  # start a timer
 
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 #
+Species =  'WTSH'  # Species name for data analysis
+Yearfocal =  2017  # Focal year for Bayesian analysis
+subsamp =  3  # Level of Sub-sampling of entire data set: use every nth record
+data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
+QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
+prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
 # First provide a "Root Directory" within which all other folders, subfolders & files are contained
 #   NOTE: enter "current" for current folder, "above1" for 1 folder above, "above2" for 2 above, 
 #   otherwise enter path with "/" separator for sub-folders
@@ -26,76 +31,119 @@ AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code i
 RunFile = 'BayesCalls2_10'       # Version of BayesCalls to run
 DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files stored
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
-ProjectName =  'Bayesian_2014'  # Name of project (for user reference)
-Species =  'WTSH'  # Species name for data analysis
-Countsdatfile = c(paste0('Counts_CapCays_',Species,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
-Datafile =  paste0('BayesCalls2_02_',Species,'_2014-2017_NoAudit.RData')  #Name of data file for analysis 
-ProjectLocation =  'Queensland'  # Island name for data analysis
-ProjectYear =  2014  # Year of analysis project 
-Yearfocal =  2014  # Focal year for Bayesian analysis
+
+Nchains = 8
+Nburnin =  1000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
+Nadapt =  100  # Number of adapting reps, default 100
+Totalreps = 10000 # Total desired reps (ie # simulations making up posterior)
+
+ProjectName =  'Bayesian_2018'  # Name of project (for user reference)
+ProjectYear =  2018  # Year of analysis project
+
+if (Species=='WTSH'|Species=='BLNO') {
+  ProjectLocation = 'CapCays'
+  Datafile =  paste0(ProjectLocation,'_Acoustic2_',Species,'_2014-2017_NoAudit.RData')  #Name of data file for analysis 
+  calendar_opt =  2  # year range: 1 = All data within calendar year, 2 = data spans New Year
+  
+  if (data_opt==2) {
+    Countsdatfile = c(paste0(ProjectLocation,'_Counts_',Species,'_2014-2017.csv'))
+  }
+  
+  if (Yearfocal==2017) {
+    # Analysis period
+    DayOfYear_strt =  275  # Oct 1 2016
+    DayOfYear_end =  152  # Jun 1 2017
+  } else if (Yearfocal==2016) {
+    # Analysis period
+    DayOfYear_strt =  274  # Oct 1 2015
+    DayOfYear_end =  153  # Jun 1 2016
+  } else {
+    # Analysis period
+    DayOfYear_strt =  274  # Oct 1
+    DayOfYear_end =  152  # Jun 1
+  }
+  
+  # set peak dates (DOY not day of survey)
+  if (Species=='WTSH') {
+    peakdates_strt = 50
+    if (Yearfocal==2016) { peakdates_end = 109 } else { peakdates_end = 109 }
+  } else if (Species=='BLNO') {
+    # still unclear when noddies are most active
+    peakdates_strt = 1
+    peakdates_end = 46
+  }
+  
+  if (Species=='WTSH') {
+    peaktimes_strt =  -120  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
+    peaktimes_stop =  -60  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
+    peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
+  } else if (Species=='BLNO') {
+    peaktimes_strt =  -30  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
+    peaktimes_stop =  30  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
+    peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
+  }
+  
+  if (prior_opt==2) {
+    PriorResultsFile =  c()  # OPTIONAL: if prior_opt = 2, Rdata file containing parameter priors
+  }
+  
+} else if (Species=='HAPE'|Species=='NESH') {
+  ProjectLocation = 'Kauai'
+  Datafile =  paste0(ProjectLocation,'_Acoustic2_',Species,'_2012-2017.RData')  #Name of data file for analysis 
+  calendar_opt =  1  # year range: 1 = All data within calendar year, 2 = data spans New Year
+  
+  if (prior_opt==2) {
+    PriorResultsFile =  c()  # OPTIONAL: if prior_opt = 2, Rdata file containing parameter priors
+  }
+  
+  if (Yearfocal==2016 | Yearfocal==2012) {
+    # Analysis period
+    DayOfYear_strt =  92  # Apr 1
+    DayOfYear_end =  274  # Sept 30
+  } else {
+    # Analysis period
+    DayOfYear_strt =  91  # Apr 1
+    DayOfYear_end =  273  # Sept 30
+  }
+  
+  if (Yearfocal==2017) {
+    peakdates_strt = 116 # Apr 26
+    peakdates_end = 233 # Aug 21
+  } else if (Yearfocal==2016) {
+    # Peak period = "comparison period" from each year
+    peakdates_strt = 127 # May 6
+    peakdates_end = 245 # Sept 1
+  } else if (Yearfocal==2015) {
+    peakdates_strt = 124 # May 4
+    peakdates_end = 241 # Aug 29
+  } else if (Yearfocal==2014) {
+    peakdates_strt = 120 # Apr 30
+    peakdates_end = 237 # Aug 25
+  } else if (Yearfocal==2013) {
+    peakdates_strt = 115 # Apr 25
+    peakdates_end = 233 # Aug 21
+  } else if (Yearfocal==2012) {
+    peakdates_strt = 127 # May 6
+    peakdates_end = 244 # Aug 31
+  }
+  
+  if (Species=='HAPE') {
+    peaktimes_strt =  40  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
+    peaktimes_stop =  100  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
+    peaktimes_ref =  1  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
+  } else if (Species=='NESH') {
+    peaktimes_strt =  30  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
+    peaktimes_stop =  90  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
+    peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
+  }
+  
+}
 
 TS_strt =  1  # Starting time step (beginning of range to load data)
 TS_stop =  57  # Ending timestep (end of range to load data)
 TimeStep1 =  '5:00PM'  # Clock time (24hr) of timestep1
 TimeStepIntvl =  15  # Number of minutes in each timestep
-subsamp =  5  # Level of Sub-sampling of entire data set: use every nth record
 
-if (Yearfocal==2017) {
-    # Analysis period
-    DayOfYear_strt =  275  # Oct 1 2016
-    DayOfYear_end =  152  # Jun 1 2017
-} else if (Yearfocal==2016) {
-  # Analysis period
-  DayOfYear_strt =  274  # Oct 1 2015
-  DayOfYear_end =  153  # Jun 1 2016
-} else {
-  # Analysis period
-  DayOfYear_strt =  274  # Oct 1
-  DayOfYear_end =  152  # Jun 1
-}
-
-# set peak dates (DOY not day of survey)
-if (Species=='WTSH') {
-  peakdates_strt = 50
-  if (Yearfocal==2016) { peakdates_end = 109 } else { peakdates_end = 109 }
-} else if (Species=='BLNO') {
-  # still unclear when noddies are most active
-  peakdates_strt = 1
-  peakdates_end = 46
-}
-
-# DayOfYear_strt =  70  # Day of Year (integer) to start reading data
-# DayOfYear_end =  280  # Day of Year (integer) to stop reading data
-# peakdates_strt =  112  # Day of Year that Peak period is considered to start
-# peakdates_end =  172  # Day of Year that Peak period is considered to stop
-
-if (Species=='WTSH') {
-  peaktimes_strt =  -120  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
-  peaktimes_stop =  -60  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
-  peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
-} else if (Species=='BLNO') {
-  peaktimes_strt =  -30  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
-  peaktimes_stop =  30  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
-  peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
-}
-
-# peaktimes_strt =  30  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
-# peaktimes_stop =  90  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
-# peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
-# peaktimes_strt2 =  45  # OPTIONAL: if peaktimes_ref = 3, this is second Peak time boundary 1 
-# peaktimes_stop2 =  120  # OPTIONAL: if peaktimes_ref = 3, this is second Peak time boundary 2 (always > boundary1) 
-
-calendar_opt =  2  # year range: 1 = All data within calendar year, 2 = data spans New Year
-data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
-QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
-prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
-PriorResultsFile =  c()  # OPTIONAL: if prior_opt = 2, Rdata file containing parameter priors
-
-Nchains = 20
-Nburnin =  1500  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
-Nadapt =  100  # Number of adapting reps, default 100
-Totalreps = 5000 # Total desired reps (ie # simulations making up posterior)
-#
 # END USER SPECIFIED PARAMETERS ---------------------------------------------
 #
 # (Should not need to edit anything below here)
