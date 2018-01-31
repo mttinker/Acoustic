@@ -5,7 +5,6 @@
 #
 # LOAD NECESSARY LIBRARIES-----------------------------------------
 existing_Packages<-as.list(installed.packages()[,1])
-# Add new packages you might need to this line, to check if they're installed and install missing packages
 required_Packages<-c("readxl","lubridate", "stringr", "dplyr", "gtools","coda",'lattice','parallel','fitdistrplus',"rjags","jagsUI","doParallel")
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)

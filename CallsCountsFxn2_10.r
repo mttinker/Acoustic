@@ -1,21 +1,10 @@
 
 # Load packages ------------------------------------------------------------------
-library(readxl)
-library(lubridate)
-library(stringr)
-library(gtools)
-library(coda)
-library(gdata)
-library(lattice)
-library(rjags)
-library(jagsUI)
-library(parallel)
-library(doParallel)
-library(fitdistrplus)
-library(ggplot2)
-library(mcmcplots)
-# install.packages("dplyr", dependencies = TRUE)
-# library(dplyr)
+existing_Packages<-as.list(installed.packages()[,1])
+required_Packages<-c("readxl","lubridate","stringr",'dplyr','ggplot2','mcmcplots',"gtools","coda",'gdata','lattice','parallel','fitdistrplus',"rjags","jagsUI","doParallel")
+missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
+if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
+invisible(lapply(required_Packages, require, character.only=T,quietly = T))
 
 # LOAD RAW DATA --------------------------------------------------------------------
 setwd(DataFolder)
