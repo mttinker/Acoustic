@@ -67,11 +67,13 @@ if (Species=='WTSH'|Species=='BLNO') {
   if (Species=='WTSH') {
     peakdates_strt = 50
     if (Yearfocal==2016) { peakdates_end = 109 } else { peakdates_end = 109 }
-  } else if (Species=='BLNO') {
+    calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
+    } else if (Species=='BLNO') {
     # use wide "index" period to capture any peak
     if (Yearfocal==2017) { peakdates_strt = 345 } else { peakdates_strt = 344 } # Dec 10
     if (Yearfocal==2016) { peakdates_end = 121 } else { peakdates_end = 120 } # April 30
-  }
+      calendar_pk_opt = 2 # 1 = all in one year, 2 = peak spans new year
+    }
   
   if (Species=='WTSH') {
     peaktimes_strt =  -120  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
@@ -92,6 +94,7 @@ if (Species=='WTSH'|Species=='BLNO') {
   ProjectLocation = 'Kauai'
   Datafile =  paste0(ProjectLocation,'_Acoustic2_',Species,'_2012-2017.RData')  #Name of data file for analysis 
   calendar_opt =  1  # year range: 1 = All data within calendar year, 2 = data spans New Year
+  calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
   
   if (prior_opt==2) {
     PriorResultsFile =  c()  # OPTIONAL: if prior_opt = 2, Rdata file containing parameter priors
