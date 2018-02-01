@@ -4,7 +4,7 @@ model{
 # alpha param, intercept for density-call rate fxn
 alpha ~ dgamma(.1,.1) 
 # beta param, determines slope for density-call rate fxn
-Beta ~ dgamma(.1,.1)     
+Beta ~ dgamma(.5,.1) T(0.001,)    
 #
 # Option 1: uniform priors on log(sigma^2)... upper bound is thus log(max possible)
 # logvarC ~ dunif(-13,log(.75^2))
@@ -44,9 +44,10 @@ for (y in 2:NYrs){
 }
 for (i in 1:NSite){    
 	# Mean estimated TRUE call rate by site:
-	Csite[i] ~ dunif(0.0001,100) 
-	Dens[i] <- alpha+Csite[i]*Beta # Mean expected density, deterministic
-	# Dens[i] <- alpha*Csite[i]^beta # Mean expected density, deterministic
+	Csite[i] ~ dunif(0.0001,100)
+	# Dens[i] <- alpha + Csite[i]*Beta
+	# Dens[i] <- max(0.001,alpha+log(Csite[i])*Beta) # Mean expected density, deterministic
+	Dens[i] <- alpha*Csite[i]^Beta # Mean expected density, deterministic
 	muD[i] <- log(Dens[i]/sqrt(1+Vd/Dens[i]^2))
 	tauD[i] <- 1/(log(1+ Vd/Dens[i]^2))
 	DensN[i] ~ dlnorm(muD[i],tauD[i]) # Mean expected density at site i (with error)

@@ -55,7 +55,7 @@ sigS = s_statsA$Mean[which(startsWith(vnA,"sigS"))]  # variance CR across sites
 sigD = s_statsC$Mean[which(startsWith(vnC,"sigD"))]  # Variance in dens est from calls
 alph = s_statsC$Mean[which(startsWith(vnC,"alpha"))] # Param 1 for call-count convers
 Beta= s_statsC$Mean[which(startsWith(vnC,"Beta"))]  # Param 2 for call-count convers
-Dens0 = alph+Beta*CR0
+Dens0 = alph*CR0^Beta
 rm(s_statsC)
 rm(s_statsA)
 
@@ -104,9 +104,10 @@ for (r in 1:simreps){
   D[r,1] = Dens0
   C[r,1] = CR0
   for (t in 2:Nyrs){
-    # D[r,t] = D[r,t-1]*exp(rnorm(1,TRUE_r,Sigma_r))
-    C[r,t] = C[r,t-1]*exp(rnorm(1,TRUE_r,Sigma_r))
-    D[r,t] = alph+Beta*C[r,t]
+    D[r,t] = D[r,t-1]*exp(rnorm(1,TRUE_r,Sigma_r))
+    # C[r,t] = C[r,t-1]*exp(rnorm(1,TRUE_r,Sigma_r))
+    C[r,t] = (D[r,t]/alph)^(1/Beta)
+    # D[r,t] = alph*C[r,t]^Beta
   }
   cntr = 0;
   for (t in 1:Nyrs){
@@ -141,7 +142,7 @@ for (r in 1:simreps){
       p = max(0.00000001,1-(vr-mu)/vr)
       Calls = rnbinom(RecPsite,Dispers,p) 
       EstA[s,t] = mean(Calls)
-      expD = alph+Beta*EstA[s,t]
+      expD = alph*EstA[s,t]^Beta
       muD = log(expD/sqrt(1+Vd/expD^2))
       sgD = sqrt(log(1+ Vd/expD^2))      
       EstD[s,t] = rlnorm(1,muD,sgD) 

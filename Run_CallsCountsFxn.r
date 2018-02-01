@@ -3,6 +3,7 @@
 # (allows estimating density from call rate)
 # 
 # NOTE: Assumed that this script is in same directory as Results files
+rm(list = ls())
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 # Set root directory path... enter absolute path or relative,
 RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
@@ -10,9 +11,11 @@ AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code i
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
 DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files stored
 RunFile = 'CallsCountsFxn2_10'       # Plotting Script
-Species =  'WTSH'  # Species name for data analysis
+Species =  'BLNO'  # Species name for data analysis
 # Specify results files to be included (one for each year):
-Resultsfiles = c("Results_WTSH_2014_2_10","Results_WTSH_2015_2_10","Results_WTSH_2016_2_10")
+Resultsfiles = c(paste0("Results_", Species,"_2014_2_10"),
+                 paste0("Results_", Species,"_2015_2_10"),
+                 paste0("Results_", Species,"_2016_2_10"))
 # Specify name of Data file with Areas of each strata
 Countsdatfile = c(paste0('Counts_CapCays_',Species,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 Areasdatfile = c(paste0('QPWS_CapCays_Strata_Area.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)

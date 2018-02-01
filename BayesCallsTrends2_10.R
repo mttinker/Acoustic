@@ -57,7 +57,7 @@ for (i in 1:Nyrs){
       }
       sitereps = sitereps[,-1]
       CR[idx] = rowMeans(sitereps)
-      DNS[idx] = alph + Beta*CR[idx]
+      DNS[idx] = alph*CR[idx]^Beta
       Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Strata_trends[s])]
       ABND[idx] = DNS[idx]*Area
       Year[idx] = rep(Yearfocal,simsamp)
@@ -78,7 +78,7 @@ for (i in 1:Nyrs){
       }else{
         CR[idx] = sample(outdf[,which(vn=='C')],simsamp)
       }
-      DNS[idx] = alph + Beta*CR[idx]
+      DNS[idx] = alph*CR[idx]^Beta
       Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Strata_trends[s])]
       ABND[idx] = DNS[idx]*Area      
     }
@@ -127,7 +127,7 @@ for (i in 1:Nyrs){
     TauVals[i,j] = 1/var(stattmp)
     Vvals[i,j] = var(stattmp)
     Cmean[i,j] = mean(CR[YearN==i & StratN==j])
-    Dmean[i,j] = alphMN + BetaMN*Cmean[i,j]
+    Dmean[i,j] = alphMN*Cmean[i,j]^BetaMN
     if(i>1){
       rhat[i-1,j] = log(Cmean[i,j]/Cmean[i-1,j])
     }

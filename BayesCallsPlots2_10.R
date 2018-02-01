@@ -20,6 +20,8 @@ library(lattice)
 library(reshape2)
 library(grid)
 
+source(paste0(AnalysisFolder,"/summarySE.R")) 
+
 # Load Data ---------------------------------------------------------------
 load(loadfile1)
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
@@ -263,20 +265,19 @@ repvec = seq(1,simsamp)
 dfStrat = data.frame(Rep = repvec,Strata = Stratalist$StratName[1],
                      Island = Stratalist$IslName[1],
                      CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[1],']')],
-                     Density = alph + Beta*post[,vn==paste0('C[', Stratalist$Stratnum[1],']')],
+                     Density = alph*post[,vn==paste0('C[', Stratalist$Stratnum[1],']')]^Beta,
                      Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[1])])
 dfStrat$Total = dfStrat$Density*dfStrat$Area
 for (i in 2:Nstrata){
   tmp = data.frame(Rep = repvec,Strata = Stratalist$StratName[i],
                    Island = Stratalist$IslName[i],
                    CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[i],']')],
-                   Density = alph + Beta*post[,vn==paste0('C[', Stratalist$Stratnum[i],']')],
+                   Density = alph*post[,vn==paste0('C[', Stratalist$Stratnum[i],']')]^Beta,
                    Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[i])])
   tmp$Total = tmp$Density*tmp$Area
   dfStrat = rbind(dfStrat,tmp)
 }
 
-source(paste0(AnalysisFolder,"/summarySE.R")) 
 sumtab = summarySE(dfStrat, measurevar="Total", groupvars=c("Strata"))  
 print("Summary of Abundance by Strata:")
 print(sumtab)
