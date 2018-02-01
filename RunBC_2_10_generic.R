@@ -33,7 +33,7 @@ DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files s
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
 
 Nchains = 8
-Nburnin =  1000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
+Nburnin =  2750  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
 Nadapt =  100  # Number of adapting reps, default 100
 Totalreps = 10000 # Total desired reps (ie # simulations making up posterior)
 
@@ -68,9 +68,9 @@ if (Species=='WTSH'|Species=='BLNO') {
     peakdates_strt = 50
     if (Yearfocal==2016) { peakdates_end = 109 } else { peakdates_end = 109 }
   } else if (Species=='BLNO') {
-    # still unclear when noddies are most active
-    peakdates_strt = 1
-    peakdates_end = 46
+    # use wide "index" period to capture any peak
+    if (Yearfocal==2017) { peakdates_strt = 345 } else { peakdates_strt = 344 } # Dec 10
+    if (Yearfocal==2016) { peakdates_end = 121 } else { peakdates_end = 120 } # April 30
   }
   
   if (Species=='WTSH') {
@@ -78,8 +78,9 @@ if (Species=='WTSH'|Species=='BLNO') {
     peaktimes_stop =  -60  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
     peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
   } else if (Species=='BLNO') {
-    peaktimes_strt =  -30  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
-    peaktimes_stop =  30  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
+    # use two hours to capture any peak
+    peaktimes_strt =  -60  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
+    peaktimes_stop =  60  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
     peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
   }
   

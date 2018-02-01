@@ -10,22 +10,6 @@ required_Packages<-c("readxl","lubridate", "stringr", "dplyr", "gtools","coda",'
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
-#
-# #rm(existing_Packages)
-# #"readxl","lubridate", "stringr", "dplyr", "gtools","rjags","jagsUI","doParallel"
-# library(readxl)
-# library(lubridate)
-# library(stringr)
-# library(gtools)
-# library(coda)
-# library(lattice)
-# library(rjags)
-# library(jagsUI)
-# library(parallel)
-# library(doParallel)
-# library(fitdistrplus)
-# # install.packages("dplyr", dependencies = TRUE)
-# # library(dplyr)
 
 # LOAD RAW DATA --------------------------------------------------------------------
 load(loadfile1)
