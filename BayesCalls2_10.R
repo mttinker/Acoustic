@@ -109,22 +109,42 @@ Nyrs = max(YearN)
 Moon = 2*dat$Illu-1
 # identify peak times, and Create index to Temporal matrix for peak times
 pk = numeric(length=length(DayOfYear))
-if (peaktimes_ref == 1){
-  ii = which(DayOfYear>=peakdates_strt & DayOfYear<=peakdates_end & 
-               c(TimeStepN - SunsetTimeStepN)>=peaktimes_strt/TimeStepIntvl &
-               c(TimeStepN - SunsetTimeStepN)<=peaktimes_stop/TimeStepIntvl)
-}else if (peaktimes_ref == 2){ 
-  ii = which(DayOfYear>=peakdates_strt & DayOfYear<=peakdates_end & 
-               c(TimeStepN-SunriseTimeStepN)>=peaktimes_strt/TimeStepIntvl &
-               c(TimeStepN-SunriseTimeStepN)<=peaktimes_stop/TimeStepIntvl)
-}else if (peaktimes_ref == 3){
-  ii1 = which(DayOfYear>=peakdates_strt & DayOfYear<=peakdates_end & 
-                c(TimeStepN - SunsetTimeStepN)>=peaktimes_strt/TimeStepIntvl &
-                c(TimeStepN - SunsetTimeStepN)<=peaktimes_stop/TimeStepIntvl)
-  ii2 = which(DayOfYear>=peakdates_strt & DayOfYear<=peakdates_end & 
-                c(TimeStepN-SunriseTimeStepN)>=peaktimes_strt2/TimeStepIntvl &
-                c(TimeStepN-SunriseTimeStepN)<=peaktimes_stop2/TimeStepIntvl)    
-  ii = c(ii1,ii2)
+if (calendar_pk_opt == 1) {
+  if (peaktimes_ref == 1){
+    ii = which(DayOfYear>=peakdates_strt & DayOfYear<=peakdates_end & 
+                 c(TimeStepN - SunsetTimeStepN)>=peaktimes_strt/TimeStepIntvl &
+                 c(TimeStepN - SunsetTimeStepN)<=peaktimes_stop/TimeStepIntvl)
+  }else if (peaktimes_ref == 2){ 
+    ii = which(DayOfYear>=peakdates_strt & DayOfYear<=peakdates_end & 
+                 c(TimeStepN-SunriseTimeStepN)>=peaktimes_strt/TimeStepIntvl &
+                 c(TimeStepN-SunriseTimeStepN)<=peaktimes_stop/TimeStepIntvl)
+  }else if (peaktimes_ref == 3){
+    ii1 = which(DayOfYear>=peakdates_strt & DayOfYear<=peakdates_end & 
+                  c(TimeStepN - SunsetTimeStepN)>=peaktimes_strt/TimeStepIntvl &
+                  c(TimeStepN - SunsetTimeStepN)<=peaktimes_stop/TimeStepIntvl)
+    ii2 = which(DayOfYear>=peakdates_strt & DayOfYear<=peakdates_end & 
+                  c(TimeStepN-SunriseTimeStepN)>=peaktimes_strt2/TimeStepIntvl &
+                  c(TimeStepN-SunriseTimeStepN)<=peaktimes_stop2/TimeStepIntvl)    
+    ii = c(ii1,ii2)
+  }
+} else if (calendar_pk_opt == 2) {
+  if (peaktimes_ref == 1){
+    ii = which((DayOfYear>=peakdates_strt | DayOfYear<=peakdates_end) & 
+                 c(TimeStepN - SunsetTimeStepN)>=peaktimes_strt/TimeStepIntvl &
+                 c(TimeStepN - SunsetTimeStepN)<=peaktimes_stop/TimeStepIntvl)
+  }else if (peaktimes_ref == 2){ 
+    ii = which((DayOfYear>=peakdates_strt | DayOfYear<=peakdates_end) & 
+                 c(TimeStepN-SunriseTimeStepN)>=peaktimes_strt/TimeStepIntvl &
+                 c(TimeStepN-SunriseTimeStepN)<=peaktimes_stop/TimeStepIntvl)
+  }else if (peaktimes_ref == 3){
+    ii1 = which((DayOfYear>=peakdates_strt | DayOfYear<=peakdates_end) & 
+                  c(TimeStepN - SunsetTimeStepN)>=peaktimes_strt/TimeStepIntvl &
+                  c(TimeStepN - SunsetTimeStepN)<=peaktimes_stop/TimeStepIntvl)
+    ii2 = which((DayOfYear>=peakdates_strt | DayOfYear<=peakdates_end) & 
+                  c(TimeStepN-SunriseTimeStepN)>=peaktimes_strt2/TimeStepIntvl &
+                  c(TimeStepN-SunriseTimeStepN)<=peaktimes_stop2/TimeStepIntvl)    
+    ii = c(ii1,ii2)
+  }
 }
 pk[ii] = 1
 Temppeak = matrix(data=0,nrow = NWeeks, ncol = NTsteps)
