@@ -1,10 +1,22 @@
 
 # Load packages ------------------------------------------------------------------
-existing_Packages<-as.list(installed.packages()[,1])
-required_Packages<-c("readxl","lubridate","stringr",'dplyr','ggplot2','mcmcplots',"gtools","coda",'gdata','lattice','parallel','fitdistrplus',"rjags","jagsUI","doParallel")
-missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
-if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
-invisible(lapply(required_Packages, require, character.only=T,quietly = T))
+library(readxl)
+library(lubridate)
+library(stringr)
+library(gtools)
+library(stats)
+library(coda)
+library(gdata)
+library(lattice)
+library(rjags)
+library(jagsUI)
+library(parallel)
+library(doParallel)
+library(fitdistrplus)
+library(ggplot2)
+library(mcmcplots)
+# install.packages("dplyr", dependencies = TRUE)
+# library(dplyr)
 
 # LOAD RAW DATA --------------------------------------------------------------------
 setwd(DataFolder)
@@ -50,9 +62,10 @@ for (i in 1:Nyrs){
     ii = Sitelist$Sitenum[s]
     j = which(YearNest==Yearfocal & StrataNC==as.character(Sitelist$Strata[s]) & 
                 SPIDnc==as.character(Sitelist$SPIDc[s]))
-    if(length(j)>0 & !(Yearfocal==2016 & as.character(Sitelist$SPIDc[s])== "NW29")){
+    if(length(j)>0  & !(Species == "WTSH" & Yearfocal==2016 & as.character(Sitelist$SPIDc[s])== "NW29")){  # & !(Yearfocal==2016 & as.character(Sitelist$SPIDc[s])== "NW29")
       Nst = Nst+1
-      samptmp = sample(outdf[,which(vn==paste0('Csite[',ii,']'))],simsamp)
+      # Sample Call rate (peak period for standardization)
+      samptmp = sample(outdf[,which(vn==paste0('Cs[',ii,']'))],simsamp)
       meanCR = mean(samptmp)
       for (jj in 1:length(j)){
         dfCounts = rbind(dfCounts,data.frame(Year=Yearfocal,
@@ -92,23 +105,31 @@ x = CRmn
 y = NCmn
 #x = NCmn
 #y = CRmn
-plot(x,y,xlab="Density",ylab="Peak Call Rate")
-a_start = .5*max(y)/max(x)
-b_start = .25
-# fxn = nls(y~a*x^b, start=list(a=a_start,b=b_start))
-fxn = lm(y~x)
-s = seq(min(x),max(x),length.out= 100)
-f_start = a_start*s^b_start
-lines(s, predict(fxn, list(x = s)), lty = 2, col = "red")
+plot(x,y,xlab="Call Rate",ylab="Nest Count Density")
+# a_start = .5*max(y)/max(x)
+# b_start = .25
+fxn = nls(y~a*x^b, start=list(a=0.5,b=.2))
+#sigmoid = function(params, x) {
+#  params[1] / (1 + exp(-params[2] * (x - params[3])))
+#}
+#fitmodel <- nls(y~a/(1 + exp(-b * (x-c))), start=list(a=.1,b=.1,c=.5))
+# fxn = lm(y~log(x))
+# fxn = lm(y~x)
+xii = seq(min(x),max(x),length.out= 100)
+lines(xii, predict(fxn, list(x = xii)), lty = 2, col = "red")
 # lines(s, f_start, lty = 2, col = "purple")
 summary(fxn)
 coeff = as.numeric(summary(fxn)$coefficients)
 fxnprior=c(max(1,coeff[1]),1/coeff[3]^2,coeff[2],1/coeff[4]^2)
 # fxnprior=c(max(1,a_start),1/ (a_start*.5)^2,b_start,1/(b_start*1)^2)
 dfCC = data.frame(CallRate = CRmn, NestDens = NCmn)
-ggplot(dfCounts, aes(x=CRmean,y=DensObsNC)) + 
+ggplot(dfCC, aes(x=CallRate,y=NestDens)) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red") 
+  stat_smooth(method = "lm", col = "red", formula = 'y~x') 
+
+ggplot(dfCC, aes(x=CallRate,y=NestDens)) + 
+  geom_point() +
+  stat_smooth(method = 'nls', formula = 'y~a*x^b', start = list(a = .01,b=1), se=FALSE) 
 
 # Set up for JAGS -----------------------------------------------------
 set.seed(123)
@@ -201,21 +222,24 @@ yyH = s_quantiles[which(startsWith(vn,'DensN')),5]
 a_post = outdf$alpha
 b_post = outdf$Beta
 
-
-  
 alpha = s_stats[which(vn=='alpha'),1]
 Beta = s_stats[which(vn=='Beta'),1]  
 sigD = s_stats[which(vn=='sigD'),1]
 Convertfxn = list(means = c(alpha,Beta), covmat = cov(cbind(a_post,b_post)))
 Vd = sigD^2
-xi = seq(0.001,30,length.out = 100)
-# yi = alpha*xi^beta
-yi = alpha+xi*Beta
+xi = seq(min(CRmn),max(CRmn),length.out = 100)
+# yi = alpha+xi*Beta
+yi = alpha*xi^Beta
+# yi = pmax(0.001,alpha+log(xi)*Beta)
 fxL = numeric(length=100)
 fxH = numeric(length=100)
 for(i in 1:100){
-  fxL[i] = quantile(a_post+xi[i]*b_post,0.025)
-  fxH[i] = quantile(a_post+xi[i]*b_post,0.975)
+  # fxL[i] = quantile(a_post+xi[i]*b_post ,0.025)
+  # fxH[i] = quantile(a_post+xi[i]*b_post ,0.975)
+  fxL[i] = quantile(a_post*xi[i]^b_post ,0.025)
+  fxH[i] = quantile(a_post*xi[i]^b_post ,0.975)
+  # fxL[i] = pmax(0,quantile(a_post+log(xi[i])*b_post ,0.025))
+  # fxH[i] = pmax(0,quantile(a_post+log(xi[i])*b_post ,0.975))
 }
 mu = log(yi/sqrt(1+Vd/yi^2))
 sig=sqrt(log(1+Vd/yi^2))
