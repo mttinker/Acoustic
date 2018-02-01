@@ -58,10 +58,12 @@ if (Yearfocal==2017) {
 if (Species=='WTSH') {
   peakdates_strt = 50
   if (Yearfocal==2016) { peakdates_end = 109 } else { peakdates_end = 109 }
+  calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
 } else if (Species=='BLNO') {
-  # still unclear when noddies are most active
-  peakdates_strt = 1
-  peakdates_end = 46
+  # use wide "index" period to capture any peak
+  if (Yearfocal==2017) { peakdates_strt = 345 } else { peakdates_strt = 344 } # Dec 10
+  if (Yearfocal==2016) { peakdates_end = 121 } else { peakdates_end = 120 } # April 30
+  calendar_pk_opt = 2 # 1 = all in one year, 2 = peak spans new year
 }
 
 # DayOfYear_strt =  70  # Day of Year (integer) to start reading data
@@ -74,8 +76,9 @@ if (Species=='WTSH') {
   peaktimes_stop =  -60  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
   peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
 } else if (Species=='BLNO') {
-  peaktimes_strt =  -30  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
-  peaktimes_stop =  30  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
+  # use two hours to capture any peak
+  peaktimes_strt =  -60  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
+  peaktimes_stop =  60  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
   peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
 }
 
