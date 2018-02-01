@@ -2,25 +2,28 @@
 # Set-up for estimating Calls vs Counts conversion function
 # (allows estimating density from call rate)
 # 
+
+rm(list=ls())
+gc()
+
 # NOTE: Assumed that this script is in same directory as Results files
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 # Set root directory path... enter absolute path or relative,
-RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
-AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code is stored
-ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
-DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files stored
-RunFile = 'CallsCountsFxn2_10'       # Plotting Script
+AnalysisFolder = 'D:/CM,Inc/Acoustic'
+ResultsFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results'
+DataFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/data'
+RunFile = 'CallsCountsFxn2_10'
+
+diagnostic_plots=F
+
 Species =  'WTSH'  # Species name for data analysis
-# Specify results files to be included (one for each year):
-Resultsfiles = c("Results_WTSH_2014_2_10","Results_WTSH_2015_2_10","Results_WTSH_2016_2_10")
-# Specify name of Data file with Areas of each strata
-Countsdatfile = c(paste0('Counts_CapCays_',Species,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
-Areasdatfile = c(paste0('QPWS_CapCays_Strata_Area.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
-Seasondefine = c(2,2,1,1,1,3,3,3,3,3,3,2)
-Nchains = 20
-Nburnin =  7000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
+StartYear = 2014
+StopYear = 2017
+
+Nchains = 8
+Nburnin =  8000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
 Nadapt =  100  # Number of adapting reps, default 100
-Totalreps = 10000 # Total desired reps (ie # simulations making up posterior)
+Totalreps = 20000 # Total desired reps (ie # simulations making up posterior)
 
 # END USER SPECIFIED PARAMETERS ---------------------------------------------
 #
@@ -32,36 +35,22 @@ Nsim =  Totalreps/Nchains + Nburnin  # Total # MCMS sims: Actual saved reps = (N
 
 simsamp = 100;
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-thisdir = getwd()
-if (RootDir=='current'){
-  RootDir = getwd()
-} else if(RootDir=='above1'){
-  tmp1 = getwd()
-  setwd('..')
-  RootDir = getwd()
-  setwd(tmp1)
-  rm('tmp1')
-} else if(RootDir=='above2'){
-  tmp1 = getwd()
-  setwd('..')
-  setwd('..')
-  RootDir = getwd()
-  setwd(tmp1)
-  rm('tmp1')
-} else {
-  RootDir = RootDir
+Resultsfiles = c()
+for (i in StartYear:StopYear) {
+  Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10'))
 }
 
-AnalysisFolder = paste0(RootDir,"/",AnalysisFolder)
+Countsdatfile = c(paste0('CapCays_Counts_',Species,'_',StartYear,'-',StopYear,'.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+Areasdatfile = c(paste0('CapCays_StrataArea_ALL.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+Seasondefine = c(2,2,1,1,1,3,3,3,3,3,3,2)
+
 savename = paste0(Species, "_", RunFile, ".Rdata")
 RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
-ResultsFolder = paste0(RootDir,"/",ResultsFolder)
-loadfiles = paste0(ResultsFolder,"/",Resultsfiles,".rdata")
-DataFolder = paste0(RootDir,"/",DataFolder)
+loadfiles = paste0(ResultsFolder,"/",Resultsfiles,".Rdata")
 loaddat = paste0(DataFolder,"/",Countsdatfile)
 loadAdat = paste0(DataFolder,"/",Areasdatfile)
 SaveResults = paste0(ResultsFolder,"/",savename)
+
 source(RunFile)
 
 #

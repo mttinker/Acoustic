@@ -163,25 +163,29 @@ s_stats = data.frame(s$statistics)
 s_quantiles = data.frame(s$quantiles) 
 Np = length(params)
 # Diagnostic plots --------------------------------------------------------
-for (i in 1:(Np-3)){
-  parnm = params[i]
-  traplot(out,parnm)
-}
-for (i in 1:5){
-  parnm = params[i]
-  denplot(out,parnm,ci=.9,collapse = TRUE)
-}
-for (i in 9:10){
-  parnm = params[i]
-  denplot(out,parnm,ci=.9,collapse = TRUE)
-}
 
-denplot(out,"Radeff[2]",ci=.9,collapse = TRUE)
-denplot(out,"Seaseff[2]",ci=.9,collapse = TRUE)
-for (y in 2:NYrs){
-  denplot(out,paste0("Yeareff[",y,"]"),ci=.9,collapse = TRUE)
+if (diagnostic_plots) {
+  
+  for (i in 1:(Np-3)){
+    parnm = params[i]
+    traplot(out,parnm)
+  }
+  for (i in 1:5){
+    parnm = params[i]
+    denplot(out,parnm,ci=.9,collapse = TRUE)
+  }
+  for (i in 9:10){
+    parnm = params[i]
+    denplot(out,parnm,ci=.9,collapse = TRUE)
+  }
+  
+  denplot(out,"Radeff[2]",ci=.9,collapse = TRUE)
+  denplot(out,"Seaseff[2]",ci=.9,collapse = TRUE)
+  for (y in 2:NYrs){
+    denplot(out,paste0("Yeareff[",y,"]"),ci=.9,collapse = TRUE)
+  }
+  
 }
-
 
 # Function plots --------------------------------------------------------
 xx =  s_stats[which(startsWith(vn,'Csite')),1]
@@ -233,4 +237,5 @@ Convertplot = ggplot()+
   xlab("Call Rate") + ylab("Nest Density") +
   theme(legend.position='none')
 print(Convertplot)
+ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/ConversionPlot_',Species,'_reps',Totalreps,'_burnin',Nburnin,'.jpg'))
 save(list = ls(all.names = TRUE),file=SaveResults)
