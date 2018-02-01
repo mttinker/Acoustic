@@ -239,7 +239,7 @@ substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 SaveResults = substrRight(RunFile, 6)
-SaveResults = paste0(ResultsFolder,'/Results', '_', Species, '_', ProjectYear, '_', SaveResults,"data")
+SaveResults = paste0(ResultsFolder,'/Results', '_', Species, '_', Yearfocal, '_', SaveResults,"data")
 
 rm('callscript')
 rm('substrRight')
