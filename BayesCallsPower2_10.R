@@ -10,6 +10,7 @@ library(ggplot2)
 library(dplyr)
 library(gdata)
 library(stats)
+library(boot)
 library(stargazer)
 library(lme4)
 library(car)
@@ -201,7 +202,7 @@ for (r in 1:simreps){
     }
   }
 }
-# Summarize sim stats
+# Summarize sim stats ---------------------------------------------------
 D_true = colMeans(D, na.rm = "T")
 D_true_CIL = apply(D,2,quantile,.025)
 D_true_CIH = apply(D,2,quantile,.975)
@@ -211,25 +212,26 @@ C_true_CIH = apply(C,2,quantile,.975)
 CR_estA = colMeans(Ahat, na.rm = "T")
 CR_estA_CIL = colMeans(Ahat-1.96*(Ahatsd/sqrt(NSite)), na.rm = "T")
 CR_estA_CIH = colMeans(Ahat+1.96*(Ahatsd/sqrt(NSite)), na.rm = "T")
-# CR_estA_CIL = apply(Ahat,2,quantile,.025)
-# CR_estA_CIH = apply(Ahat,2,quantile,.975)
+# CR_estA_CIL = apply(Ahat,2,quantile,.05)
+# CR_estA_CIH = apply(Ahat,2,quantile,.95)
 D_estA = colMeans(DhatA, na.rm = "T")
 D_estA_CIL = colMeans(DhatA-1.96*(DhatAsd/sqrt(NSite)), na.rm = "T")
 D_estA_CIH = colMeans(DhatA+1.96*(DhatAsd/sqrt(NSite)), na.rm = "T")
-# D_estA_CIL = apply(DhatA,2,quantile,.025)
-# D_estA_CIH = apply(DhatA,2,quantile,.975)
+# D_estA_CIL = apply(DhatA,2,quantile,.05)
+# D_estA_CIH = apply(DhatA,2,quantile,.95)
 D_estC = colMeans(DhatC, na.rm = "T")
 D_estC_CIL = colMeans(DhatC-1.96*(DhatCsd/sqrt(Ncnts)), na.rm = "T")
 D_estC_CIH = colMeans(DhatC+1.96*(DhatCsd/sqrt(Ncnts)), na.rm = "T")
-# D_estC_CIL = apply(DhatC,2,quantile,.025,na.rm = "T")
-# D_estC_CIH = apply(DhatC,2,quantile,.975,na.rm = "T")
+# D_estC_CIL = apply(DhatC,2,quantile,.05,na.rm = "T")
+# D_estC_CIH = apply(DhatC,2,quantile,.95,na.rm = "T")
 x = seq(1,Nyrs)
 # Trend plots:
 # Call rate estimates
 plot(x, CR_estA,
      ylim=range(c(.8*min(CR_estA_CIL), 1.02*max(CR_estA_CIH))),
      pch=19, xlab="Year", ylab="Estimate of Call Rate",
-     main="Estimated Call Rates Over Time"
+     main="Estimated Call Rates Over Time",
+     sub= "(dashed line = true value)"
 )
 arrows(x, CR_estA_CIL, x, CR_estA_CIH, length=0.05, angle=90, code=3)
 lines(x,C_true,type = "l",lty=2)
@@ -238,7 +240,8 @@ lines(x,C_true,type = "l",lty=2)
 plot(x, D_estA,
      ylim=range(c(.8*min(D_estA_CIL), 1.02*max(D_estA_CIH))),
      pch=19, xlab="Year", ylab="Estimate of Density",
-     main="Density Estimates Estimated from Acoustic"
+     main="Density Estimates Estimated from Acoustic", 
+     sub= "(dashed line = true value)"
 )
 arrows(x, D_estA_CIL, x, D_estA_CIH, length=0.05, angle=90, code=3)
 lines(x,D_true,type = "l",lty=2)
@@ -249,7 +252,8 @@ if(npts>0){
   plot(x, D_estC,
        ylim=range(c(.8*min(D_estC_CIL,na.rm = "T"), 1.02*max(D_estC_CIH,na.rm = "T"))),
        pch=19, xlab="Year", ylab="Estimate of Density",
-       main="Density Estimates, Counts Data Only"
+       main="Density Estimates, Counts Data Only",
+       sub= "(dashed line = true value)"
   )
   arrows(x, D_estC_CIL, x, D_estC_CIH, length=0.05, angle=90, code=3)
   lines(x,D_true,type = "l",lty=2)
@@ -257,11 +261,20 @@ if(npts>0){
 
 # Power Stats Summaries -------------------------------------------------------------
 # 1) Power to Detect Trends in Call rates
+sample_Rmn <- function(x, d) {
+  return(rnorm(1,mean(x[d]), sd(x[d])/sqrt(NSite)))
+}
+Power_mn <- function(x, d) {
+  return(100*(length(subset(x[d],x[d]<=(1-P_signif)))/length(x[d])))
+}
 PowerCR = 100*(length(subset(Pval,Pval<=(1-P_signif)))/length(Pval))
+PowerCR_samp = boot(Pval, Power_mn, R=1000)  
+dfPower = data.frame(Method = "Acoustic Data, Call rate",Power=PowerCR_samp$t)
 P_sig = mean(Psig)
 r_CIs = colMeans(r_CI)
 mean_r_est = mean(r_est)
-r_est_dens = density(r_est)
+r_est_bt = boot(r_est, sample_Rmn, R=10000) 
+r_est_bt = r_est_bt$t
 if (npts > 0){
   Powersum = data.frame(N_Years = Nyrs, True_r = TRUE_r, Sigma_r = Sigma_r,
                         N_Sites = NSite, N_CPM15_st = RecPsite, 
@@ -281,7 +294,7 @@ print("Power Summary, Trend in Call Rate Estimated from Acoustic Data")
 stargazer(Powersum, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
 print(" ")
 print(" ")
-df = data.frame(N_Sites = NSite, Estimate = r_est)  
+df = data.frame(N_Sites = NSite, Estimate = r_est_bt)  
 plt = ggplot(df, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
   labs(title = paste0("Probability of Detecting trend in Call Rate"),
        subtitle = paste0("Monitor ", Nyrs," Years with ", NSite, " Sites and ",
@@ -297,11 +310,14 @@ print(plt)
 #
 # 2) Power estimating Density Trends, Acoustic Data plus Calls to Counts Conversion Fxn
 PowerA = 100*(length(subset(PvalA,PvalA<=(1-P_signif)))/length(PvalA))
+PowerA_samp = boot(PvalA, Power_mn, R=1000)  
+dfPower = rbind(dfPower, data.frame(Method = "Acoustic-based Density Estimate",Power=PowerA_samp$t))
 Psig_A = mean(PsigA)
 rA_CIs = colMeans(rA_CI)
 mean_r_estA = mean(rA_est)
 r_est_densA = density(rA_est)
-
+r_estA_bt = boot(rA_est, sample_Rmn, R=10000) 
+r_estA_bt = r_estA_bt$t
 if (npts > 0){
   PowersumA = data.frame(N_Years = Nyrs, True_r = TRUE_r, Sigma_r = Sigma_r,
                         N_Sites = NSite, N_CPM15_st = RecPsite, 
@@ -322,7 +338,7 @@ stargazer(PowersumA, type = 'text', out = 'out.txt', summary=FALSE, rownames=FAL
 print(" ")
 print(" ")
 #
-dfA = data.frame(N_Sites = Ncnts, Estimate = rA_est)  
+dfA = data.frame(N_Sites = Ncnts, Estimate = r_estA_bt)  
 pltA = ggplot(dfA, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
   labs(x="Estimated Population Trend", y = "Probability of Estimate") +
   labs(title = paste0("Probability of Detecting Trend in Acoustic-Estimated Density"),
@@ -336,13 +352,19 @@ print(pltA)
 #
 # 3) Power estimating Density Trends, Counts only (Possible only if 3 or more sets of counts)
 if(npts>=3){
+  sample_Rmn <- function(x, d) {
+    return(rnorm(1,mean(x[d]), sd(x[d])/sqrt(npts)))
+  }  
 # Pval_C = median(PvalC)
 PowerC = 100*(length(subset(PvalC,PvalC<=(1-P_signif)))/length(PvalC))
+PowerC_samp = boot(PvalC, Power_mn, R=1000)  
+dfPower = rbind(dfPower, data.frame(Method = "Nest Count Density Estimate",Power=PowerC_samp$t))
 # PowerC = 100*(1-Pval_C)
 Psig_C = mean(PsigC)
 rC_CIs = colMeans(rC_CI)
 mean_r_estC = mean(rC_est)
-r_est_densC = density(rC_est)
+r_estC_bt = boot(rC_est, sample_Rmn, R=10000) 
+r_estC_bt = r_estC_bt$t
 PowersumC = data.frame(N_Years = Nyrs, True_r = TRUE_r, Sigma_r = Sigma_r,
                       N_Sites = Ncnts, N_CPM15_st = 0, Yr_bt_Cnts = Countfreq,  
                       RepNC_st = NcountsPSite, 
@@ -354,7 +376,7 @@ PowersumC = data.frame(N_Years = Nyrs, True_r = TRUE_r, Sigma_r = Sigma_r,
 print("Power Summary, Density estimated from Count Data Only")
 stargazer(PowersumC, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
 #
-dfC = data.frame(N_Sites = Ncnts, Estimate = rC_est)  
+dfC = data.frame(N_Sites = Ncnts, Estimate = r_estC_bt)  
 pltC = ggplot(dfC, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
   labs(x="Estimated Population Trend", y = "Probability of Estimate") +
   labs(title = paste0("Probability of Detecting trend, Counts Only, "),
@@ -367,8 +389,13 @@ pltC = ggplot(dfC, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
   theme(legend.position="none")
 print(pltC)
 }
-PowerCR
-PowerA
-PowerC
-
-
+pltP = ggplot(dfPower, aes(x=Method, y=Power)) +
+  geom_boxplot(fill = "light blue", colour = "black",
+               alpha = 0.7) +
+  scale_y_continuous(name = "Power to Detect Trend",labels = scales::comma) +
+  scale_x_discrete(name = "Method of Analysis") +
+  labs(title = paste0("Power Analysis, Comparison of Methods"),
+       subtitle = paste0("Acoustic ", Nyrs," Years with ", NSite, " Sites vs. ",
+         "Nest Counts at ", Ncnts, " sites, ", NcountsPSite, " reps per site, every ",  Countfreq, " Years" )) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) 
+print(pltP)
