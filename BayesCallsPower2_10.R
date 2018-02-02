@@ -227,36 +227,46 @@ D_estC_CIH = colMeans(DhatC+1.96*(DhatCsd/sqrt(Ncnts)), na.rm = "T")
 x = seq(1,Nyrs)
 # Trend plots:
 # Call rate estimates
-plot(x, CR_estA,
-     ylim=range(c(.8*min(CR_estA_CIL), 1.02*max(CR_estA_CIH))),
-     pch=19, xlab="Year", ylab="Estimate of Call Rate",
-     main="Estimated Call Rates Over Time",
-     sub= "(dashed line = true value)"
-)
-arrows(x, CR_estA_CIL, x, CR_estA_CIH, length=0.05, angle=90, code=3)
-lines(x,C_true,type = "l",lty=2)
+dat = data.frame(Year=x,Esimate=CR_estA,lower=CR_estA_CIL,upper=CR_estA_CIH,True=C_true)
+pltR1 = ggplot() + 
+  geom_errorbar(data=dat, mapping=aes(x=Year, ymax=upper, ymin=lower), width=0.2, size=1, color="blue") + 
+  geom_point(data=dat, mapping=aes(x=Year, y=Esimate), size=4, shape=21, fill="white") +
+  geom_line(data=dat, mapping=aes(x=Year, y=True),linetype = "dashed")+
+  labs(x="Year", y = "Estimated Call Rate") +
+  labs(title = paste0("Estimated Call Rate Over Time, r = ",TRUE_r, ", process error = ", Sigma_r,
+                      ", "),
+       subtitle = paste0("Monitor ", Nyrs," Years with ", NSite, " Sites and ",RecPsite, 
+                         " Acoustic Records per site (Dashed line = Actual Trend)")) 
+print(pltR1)
 #
 # Density Estimates, Acoustic and Counts
-plot(x, D_estA,
-     ylim=range(c(.8*min(D_estA_CIL), 1.02*max(D_estA_CIH))),
-     pch=19, xlab="Year", ylab="Estimate of Density",
-     main="Density Estimates Estimated from Acoustic", 
-     sub= "(dashed line = true value)"
-)
-arrows(x, D_estA_CIL, x, D_estA_CIH, length=0.05, angle=90, code=3)
-lines(x,D_true,type = "l",lty=2)
+dat = data.frame(Year=x,Esimate=D_estA,lower=D_estA_CIL,upper=D_estA_CIH,True=D_true)
+pltR2 = ggplot() + 
+  geom_errorbar(data=dat, mapping=aes(x=Year, ymax=upper, ymin=lower), width=0.2, size=1, color="blue") + 
+  geom_point(data=dat, mapping=aes(x=Year, y=Esimate), size=4, shape=21, fill="white") +
+  geom_line(data=dat, mapping=aes(x=Year, y=True),linetype = "dashed")+
+  labs(x="Year", y = "Estimated Density based on Call-Count Conversion") +
+  labs(title = paste0("Estimated Density Over Time, Acoustic Data, r = ",TRUE_r, ", process error = ", Sigma_r,
+                      ", "),
+       subtitle = paste0("Monitor ", Nyrs," Years with ", NSite, " Sites and ",RecPsite, 
+                         " Acoustic Records per site (Dashed line = Actual Trend)")) 
+print(pltR2)
 #
 # Density Estimates, Counts only (if possible)
 npts = sum(!is.na(D_estC))
 if(npts>0){
-  plot(x, D_estC,
-       ylim=range(c(.8*min(D_estC_CIL,na.rm = "T"), 1.02*max(D_estC_CIH,na.rm = "T"))),
-       pch=19, xlab="Year", ylab="Estimate of Density",
-       main="Density Estimates, Counts Data Only",
-       sub= "(dashed line = true value)"
-  )
-  arrows(x, D_estC_CIL, x, D_estC_CIH, length=0.05, angle=90, code=3)
-  lines(x,D_true,type = "l",lty=2)
+  dat = data.frame(Year=x,Esimate=D_estC,lower=D_estC_CIL,upper=D_estC_CIH,True=D_true)
+  pltR3 = ggplot() + 
+    geom_errorbar(data=dat, mapping=aes(x=Year, ymax=upper, ymin=lower), width=0.2, size=1, color="blue") + 
+    geom_point(data=dat, mapping=aes(x=Year, y=Esimate), size=4, shape=21, fill="white") +
+    geom_line(data=dat, mapping=aes(x=Year, y=True),linetype = "dashed")+
+    labs(x="Year", y = "Estimated Density from Nest Counts") +
+    labs(title = paste0("Estimated Density Over Time, Nest Counts, r = ",TRUE_r, ", process error = ", Sigma_r,
+                        ", "),
+         subtitle = paste0("Monitor ", Nyrs, " Years, Nest counts at ", Ncnts, 
+                           " sites, ", NcountsPSite, " reps per site, every ",  
+          Countfreq, " Years (Dashed line = Actual Trend)")) 
+  print(pltR3)
 }
 
 # Power Stats Summaries -------------------------------------------------------------
@@ -366,7 +376,7 @@ mean_r_estC = mean(rC_est)
 r_estC_bt = boot(rC_est, sample_Rmn, R=10000) 
 r_estC_bt = r_estC_bt$t
 PowersumC = data.frame(N_Years = Nyrs, True_r = TRUE_r, Sigma_r = Sigma_r,
-                      N_Sites = Ncnts, N_CPM15_st = 0, Yr_bt_Cnts = Countfreq,  
+                      N_Sites = Ncnts, Yr_bt_Cnts = Countfreq,  
                       RepNC_st = NcountsPSite, 
                       Est_r = format(mean_r_estC, digits=3), 
                       CI_r_Lo = format(rC_CIs[1], digits = 3),

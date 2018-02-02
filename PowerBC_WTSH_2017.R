@@ -25,7 +25,7 @@ NyrsP = 15          # Number of Years of Monitoring
 TRUE_r = -0.03     # Desired detectable trend (ie true trend)
 Sigma_r = 0.1       # Process error: standard deviation in trend over years
 NSiteA = 40         # Number of Sites Monitored per year (Acoustic)
-Countfreq = 2       # Frequency of nest counts (counts every X years)(0=no counts)
+Countfreq = 1       # Frequency of nest counts (counts every X years)(0=no counts)
 NSiteC = 40         # Number of Sites with nest counts on count years
 NcountsPSite = 2    # Avg Number Nest count replicates per site 
 RecPsite = 1000     # Number of 15min acoustic records per site
