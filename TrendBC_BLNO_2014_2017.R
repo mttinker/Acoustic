@@ -29,7 +29,7 @@ DataFolder = 'CapCays/data'
 Convertfile = 'WTSH_CallsCountsFxn2_10' # Results file with conversion function
 # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 Areasdatfile = 'QPWS_CapCays_Strata_Area.csv' 
-Trendtype = 1 # If type = 1, calculate trend for call rate, if 2 calculate for density/abundance
+Trendtype = 2 # If type = 1, calculate trend for call rate, if 2 calculate for density/abundance
 Nchains = 20
 Nburnin =  5000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
 Nadapt =  100  # Number of adapting reps, default 100
