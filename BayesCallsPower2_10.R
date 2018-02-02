@@ -20,7 +20,7 @@ s_statsA <- s_stats;
 Stratalist <- Stratalist
 vnA <- vn
 detach(paste0('file:',loadfile),character.only = TRUE)
-rm(vn)
+# rm(vn)
 # Load Call-Count conversion function 
 attach(loadfile2); 
 Convfxn = Convertfxn
@@ -28,6 +28,8 @@ Convplot = Convertplot
 s_statsC <- s_stats;
 vnC = vn
 detach(paste0('file:',loadfile2),character.only = TRUE)
+AB = rmvnorm(n=simreps, mean=Convfxn$means, sigma=Convfxn$covmat)
+alphR = AB[,1]; BetaR = AB[,2]; rm(AB)
 # Load count data
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
 dfC = read.csv(file = loadCdat, header = TRUE, sep = ",")
@@ -50,14 +52,15 @@ Yrcounts = unique(dfNC$contract_year)
 # Dens0 = mean(dfNC$Density[dfNC$contract_year==min(Yrcounts)])  # Initial nest density
 ii = which(Stratalist$StratName==Strata_trends)
 CR0 = s_statsA$Mean[which(startsWith(vnA,paste0("C[",ii)))] 
+minCsite = min(s_statsA$Mean[which(startsWith(vnA,paste0("Csite[",ii)))] )
 Dispers = s_statsA$Mean[which(startsWith(vnA,"Dispers"))] 
 sigS = s_statsA$Mean[which(startsWith(vnA,"sigS"))]  # variance CR across sites
 sigD = s_statsC$Mean[which(startsWith(vnC,"sigD"))]  # Variance in dens est from calls
 alph = s_statsC$Mean[which(startsWith(vnC,"alpha"))] # Param 1 for call-count convers
 Beta= s_statsC$Mean[which(startsWith(vnC,"Beta"))]  # Param 2 for call-count convers
 Dens0 = alph*CR0^Beta
-rm(s_statsC)
-rm(s_statsA)
+#rm(s_statsC)
+# rm(s_statsA)
 
 Vn = sigN^2
 Vc = sigC^2
@@ -141,16 +144,19 @@ for (r in 1:simreps){
       vr = ifelse(mu<0,0.0000001, mu + (mu^2)/Dispers)
       p = max(0.00000001,1-(vr-mu)/vr)
       Calls = rnbinom(RecPsite,Dispers,p) 
-      EstA[s,t] = mean(Calls)
+      EstA[s,t] = max(minCsite/2,mean(Calls))
       expD = alph*EstA[s,t]^Beta
       muD = log(expD/sqrt(1+Vd/expD^2))
       sgD = sqrt(log(1+ Vd/expD^2))      
       EstD[s,t] = rlnorm(1,muD,sgD) 
+      # EstD[s,t] = expD
     }
-    DhatA[r,t] = mean(EstD[,t])
-    DhatAsd[r,t] = sd(EstD[,t])
     Ahat[r,t] = mean(EstA[,t])
     Ahatsd[r,t] = sd(EstA[,t])
+    # DhatA[r,t] = mean(EstD[,t])
+    DhatA[r,t] = alphR[r]*Ahat[r,t]^BetaR[r]
+    DhatAsd[r,t] = sd(EstD[,t])    
+    tmp=C[r,t]-Ahat[r,t]
   }
   # Stats for Call rate trend est
   lgN = log(Ahat[r,])
@@ -168,7 +174,7 @@ for (r in 1:simreps){
   # Stats for acoustic data density est
   lgNA = log(DhatA[r,])
   fitA = lm(lgNA ~ Years, na.action=na.omit)
-  # summary(fit)
+  # summary(fitA)
   # PvalC[r] = lmp(fitC)
   rA_est[r] = as.numeric(fitA$coefficients[2])
   PvalA[r] = as.numeric(summary(fitA)$coefficients[2,4])

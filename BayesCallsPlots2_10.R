@@ -20,7 +20,7 @@ library(lattice)
 library(reshape2)
 library(grid)
 
-source(paste0(AnalysisFolder,"/summarySE.R")) 
+source(paste0(AnalysisFolder,"/summarySE.r")) 
 
 # Load Data ---------------------------------------------------------------
 load(loadfile1)

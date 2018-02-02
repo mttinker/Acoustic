@@ -1,6 +1,7 @@
 # Set-up for doing plots from BayesCalls analysis
 # Purpose of this file is for user to specify parameters needed for plotting results
 # NOTE: Assumed that this script is in same directory as Results file
+rm(list = ls())
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 Resultsfile = "Results_WTSH_2016_2_10"
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
@@ -59,7 +60,7 @@ DataFolder = paste0(RootDir,"/",DataFolder)
 Areasdatfile = paste0(DataFolder,"/",Areasdatfile)
 loadfile1 = paste0(ResultsFolder,"/",Resultsfile,".rdata")
 loadfile2 = paste0(ResultsFolder,"/",Convertfile,".rdata")
-
+AnalysisFolder = paste0(RootDir,"/",AnalysisFolder)
 rm(thisdir)
 #
 source(RunFile)

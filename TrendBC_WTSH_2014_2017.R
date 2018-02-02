@@ -1,17 +1,19 @@
 # Set-up for doing trend analysis from BayesCalls analysis
 # Purpose of this file is for user to specify parameters for doing trend analysis
 #
+rm(list = ls())
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 # Set root directory path... enter absolute path or relative,
 RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
 AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code is stored
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
-RunFile = 'BayesCallsTrends2_10'       # Plotting Script
+RunFile = 'BayesCallsTrends2_10'       # Script to run
+Species =  'WTSH'  # Species name for data analysis
 # Specify results files to be included (one for each year):
-Resultsfiles = c("Results_WTSH_2014_2_10",
-                 "Results_WTSH_2015_2_10",
-                 "Results_WTSH_2016_2_10",
-                 "Results_WTSH_2017_2_10")
+Resultsfiles = c(paste0("Results_", Species,"_2014_2_10"),
+                 paste0("Results_", Species,"_2015_2_10"),
+                 paste0("Results_", Species,"_2016_2_10"),
+                 paste0("Results_", Species,"_2017_2_10"))
 # Specify focal strata for estimating trends: 
 #  NOTE: these strata must be present in each years data!!
 Strata_trends = c('North West Pisonia')
