@@ -3,7 +3,7 @@
 # NOTE: Assumed that this script is in same directory as Results file
 rm(list = ls())
 # USER SPECIFIED PARAMETERS -------------------------------------------------
-Resultsfile = "Results_BLNO_2016_2_10"
+Resultsfile = "Results_BLNO_2017_2_10"
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
 # Set root directory path... enter absolute path or relative,
 RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
