@@ -19,9 +19,7 @@ library(gtools)
 library(lattice)
 library(reshape2)
 library(grid)
-
-source(paste0(AnalysisFolder,"/summarySE.R")) 
-
+library(stargazer)
 # Load Data ---------------------------------------------------------------
 load(loadfile1)
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
@@ -278,10 +276,6 @@ for (i in 2:Nstrata){
   dfStrat = rbind(dfStrat,tmp)
 }
 
-sumtab = summarySE(dfStrat, measurevar="Total", groupvars=c("Strata"))  
-print("Summary of Abundance by Strata:")
-print(sumtab)
-
 plt2 = ggplot(dfStrat, aes(x=Strata, y=CallRate)) +
   geom_boxplot(fill = "light blue", colour = "black",
                alpha = 0.7) +
@@ -326,3 +320,19 @@ plt5 = ggplot(dfIsl, aes(x=Island, y=Total)) +
   ggtitle(paste0("Estimated Abundance by Islands, ", Yearfocal)) +
   theme(axis.text.x=element_text(angle=45,hjust=1)) 
 print(plt5)
+
+# sumtab = summarySE(dfStrat, measurevar="Total", groupvars=c("Strata"), na.rm=FALSE,
+#                    conf.interval=.95, .drop=TRUE)  
+# print("Summary of Abundance by Strata:")
+# print(sumtab)
+
+sumtab = ddply(dfStrat,.(Strata),summarise,
+      n=length(na.omit(Total)),
+      Mean = mean(Total),
+      Median=quantile(Total,0.5,na.rm=TRUE),
+      LCI=quantile(Total,0.025,na.rm=TRUE),
+      UCI=quantile(Total,0.975,na.rm=TRUE))
+print("Summary of Abundance by Strata:")
+stargazer(sumtab, type = 'text', digits = 1, out = 'out.txt', summary=FALSE, rownames=FALSE)
+
+
