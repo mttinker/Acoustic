@@ -260,20 +260,29 @@ print(Convplot)
 AB = rmvnorm(n=simsamp, mean=Convfxn$means, sigma=Convfxn$covmat)
 alph = AB[,1]; Beta = AB[,2]; rm(AB)
 repvec = seq(1,simsamp)
-dfStrat = data.frame(Rep = repvec,Strata = Stratalist$StratName[1],
-                     Island = Stratalist$IslName[1],
-                     CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[1],']')],
-                     Density = alph*post[,vn==paste0('C[', Stratalist$Stratnum[1],']')]^Beta,
-                     Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[1])])
-dfStrat$Total = dfStrat$Density*dfStrat$Area
-for (i in 2:Nstrata){
-  tmp = data.frame(Rep = repvec,Strata = Stratalist$StratName[i],
-                   Island = Stratalist$IslName[i],
-                   CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[i],']')],
-                   Density = alph*post[,vn==paste0('C[', Stratalist$Stratnum[i],']')]^Beta,
-                   Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[i])])
-  tmp$Total = tmp$Density*tmp$Area
-  dfStrat = rbind(dfStrat,tmp)
+if (Nstrata==1) {
+  dfStrat = data.frame(Rep = repvec,Strata = Stratalist$StratName[1],
+                       Island = Stratalist$IslName[1],
+                       CallRate = post[,vn=='C'],
+                       Density = alph*post[,vn=='C']^Beta,
+                       Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[1])])
+  dfStrat$Total = dfStrat$Density*dfStrat$Area
+} else {
+  dfStrat = data.frame(Rep = repvec,Strata = Stratalist$StratName[1],
+                       Island = Stratalist$IslName[1],
+                       CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[1],']')],
+                       Density = alph*post[,vn==paste0('C[', Stratalist$Stratnum[1],']')]^Beta,
+                       Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[1])])
+  dfStrat$Total = dfStrat$Density*dfStrat$Area
+  for (i in 2:Nstrata){
+    tmp = data.frame(Rep = repvec,Strata = Stratalist$StratName[i],
+                     Island = Stratalist$IslName[i],
+                     CallRate = post[,vn==paste0('C[', Stratalist$Stratnum[i],']')],
+                     Density = alph*post[,vn==paste0('C[', Stratalist$Stratnum[i],']')]^Beta,
+                     Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Stratalist$StratName[i])])
+    tmp$Total = tmp$Density*tmp$Area
+    dfStrat = rbind(dfStrat,tmp)
+  }
 }
 
 plt2 = ggplot(dfStrat, aes(x=Strata, y=CallRate)) +
