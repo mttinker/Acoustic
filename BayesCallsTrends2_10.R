@@ -14,6 +14,7 @@ library(lattice)
 library(grid)
 library(ggplot2)
 library(doParallel)
+library(reshape2)
 # Load Data ---------------------------------------------------------------
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
 attach(loadfile2); 
@@ -23,7 +24,6 @@ detach(paste0('file:',loadfile2),character.only = TRUE)
 AB = rmvnorm(n=simsamp, mean=Convfxn$means, sigma=Convfxn$covmat)
 alph = AB[,1]; Beta = AB[,2]; rm(AB)
 alphMN = Convfxn$means[1]; BetaMN = Convfxn$means[2]
-
 #
 Nyrs = length(loadfiles)
 Nstrat = length(Strata_trends)
@@ -35,6 +35,8 @@ StratN = numeric(length = Nobs)
 CR = numeric(length = Nobs)
 DNS = numeric(length = Nobs)
 ABND = numeric(length = Nobs)
+Rep = numeric(length = Nobs)
+RepN = seq(1:simsamp)
 for (i in 1:Nyrs){
   attach(loadfiles[i]); 
   outdf <- outdf;
@@ -63,7 +65,8 @@ for (i in 1:Nyrs){
       Year[idx] = rep(Yearfocal,simsamp)
       Strat[idx] = rep(Strata_trends[s],simsamp)
       YearN[idx] = rep(i,simsamp)
-      StratN[idx] = rep(s,simsamp)     
+      StratN[idx] = rep(s,simsamp)
+      Rep[idx] = RepN
     }
   }else{
     for (s in 1:Nstrat){
@@ -81,6 +84,7 @@ for (i in 1:Nyrs){
       DNS[idx] = alph*CR[idx]^Beta
       Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Strata_trends[s])]
       ABND[idx] = DNS[idx]*Area      
+      Rep[idx] = RepN
     }
   }
   rm(outdf)
@@ -89,8 +93,14 @@ for (i in 1:Nyrs){
   rm(Yearfocal)
   rm(vn)
 }
-dfT = data.frame(Year=Year,Strata=Strat,YearN=YearN,StratN=StratN,CR=CR,DNS=DNS,ABND=ABND)
+dfT = data.frame(Year=Year,Strata=Strat,Rep=Rep,YearN=YearN,StratN=StratN,CR=CR,DNS=DNS,ABND=ABND)
 Yearvals = sort(unique(dfT$Year))
+
+if (Trendtype==3){
+  dfIsl = dcast(dfT[,c(3,4,5,8)],YearN + Rep ~ StratN, value.var='ABND')
+  dfIsl$Total = apply(dfIsl[3:dim(dfIsl)[2]],1,sum,na.rm=TRUE)
+  Nobs = length(dfIsl$Total)
+}
   
 # Examine data ---------------------------------------------------------
 
@@ -109,6 +119,15 @@ pl1c = ggplot(data=dfT) +
   scale_x_discrete(breaks=seq(1,Nyrs), labels=as.character(unique(Year))) + ylab("Abundance")
 print(pl1c)
 
+if (Trendtype==3){
+  Nstrat = 1
+  pl1d = ggplot(data=dfIsl) + 
+    geom_boxplot( aes(x=factor(YearN), y=Total),fill=3) +
+    scale_x_discrete(breaks=seq(1,Nyrs), labels=as.character(unique(Year))) +
+    ylab("Abundance") + ggtitle("Whole-Island Abundance")
+  print(pl1d)
+}
+
 # Process data for analysys --------------------------------------------
 setwd(AnalysisFolder)
 
@@ -116,20 +135,34 @@ TauVals = matrix(nrow = Nyrs, ncol = Nstrat)
 Vvals = matrix(nrow = Nyrs, ncol = Nstrat)
 Cmean = matrix(nrow = Nyrs, ncol = Nstrat)
 Dmean = matrix(nrow = Nyrs, ncol = Nstrat)
+Amean = matrix(nrow = Nyrs, ncol = Nstrat)
 rhat =  matrix(nrow = Nyrs-1, ncol = Nstrat)
 for (i in 1:Nyrs){
   for (j in 1:Nstrat){
     if (Trendtype==1){
       stattmp = CR[YearN==i & StratN==j]
-    }else{
+    }else if(Trendtype==2){
       stattmp = DNS[YearN==i & StratN==j]
+    }else if(Trendtype==3){
+      stattmp = dfIsl$Total[dfIsl$YearN==i]  
     }
     TauVals[i,j] = 1/var(stattmp)
     Vvals[i,j] = var(stattmp)
-    Cmean[i,j] = mean(CR[YearN==i & StratN==j])
-    Dmean[i,j] = alphMN*Cmean[i,j]^BetaMN
-    if(i>1){
-      rhat[i-1,j] = log(Cmean[i,j]/Cmean[i-1,j])
+    if(Trendtype==3){
+      Amean[i,j] = mean(stattmp)
+      if(i>1){
+        rhat[i-1,j] = log(Amean[i,j]/Amean[i-1,j])
+      }
+    }else{
+      Cmean[i,j] = mean(CR[YearN==i & StratN==j])
+      Dmean[i,j] = alphMN*Cmean[i,j]^BetaMN
+      if(i>1){
+        if (Trendtype==1){
+          rhat[i-1,j] = log(Cmean[i,j]/Cmean[i-1,j])
+        }else if(Trendtype==2){
+          rhat[i-1,j] = log(Dmean[i,j]/Dmean[i-1,j])
+        }
+      }
     }
   }
 }
@@ -144,14 +177,19 @@ registerDoParallel(cl)
 if (Trendtype==1){
   stattmp = CR
   statmn = Cmean
-}else{
+}else if(Trendtype==2){
   stattmp = DNS
   statmn = Dmean
+}else if(Trendtype==3){
+  stattmp = dfIsl$Total
+  statmn = Amean
+  YearN = dfIsl$YearN
+  StratN = numeric(length = length(YearN))+1
 }
+
 data <- list(CR=stattmp,Nobs=Nobs,Nyrs=Nyrs,Nstrat=Nstrat,
              YearN=YearN,StratN=StratN,Vvals=Vvals,
              Cmean=statmn,TauVals=TauVals) 
-
 # Inits: Best to generate initial values using function
 inits <- function(){
   list(rmean=runif(1,-.01,.01),sigR=runif(1,0.05,0.1),r=rhat)
@@ -206,14 +244,36 @@ for (i in 1:Np){
 # Plot boxplot of growth rates by strata
 SampN = (Nyrs-1)*Nstrat*simsamp
 YearR = numeric(length = SampN)
+
 StratR = character(length = SampN)
 r_est = numeric(length = SampN)
+if(Nstrat>1){
+  YearRR = numeric(length = (Nyrs-1)*simsamp)
+  ry_est = numeric(length = (Nyrs-1)*simsamp)
+}
 for (i in 1:(Nyrs-1)){
+  if(Nstrat>1){
+    idxx = seq(((i-1)*simsamp+1),((i-1)*simsamp+simsamp))
+    YearRR[idxx] = rep(Yearvals[i],simsamp)
+    if (Nyrs < 3){
+      ry_est[idxx] = sample(outdf[,which(vn=='rY')],simsamp)
+    }else{
+      ry_est[idxx] = sample(outdf[,which(vn==paste0('rY[',i,']'))],simsamp)
+    }
+  }
   for (j in 1:Nstrat){
     idx = seq(((i-1)*Nstrat*simsamp+(j-1)*simsamp+1),((i-1)*Nstrat*simsamp+(j-1)*simsamp+simsamp))
     YearR[idx] = rep(Yearvals[i],simsamp)
-    StratR[idx] = rep(Strata_trends[j],simsamp)
-    r_est[idx] = sample(outdf[,which(vn==paste0('r[',i,',',j,']'))],simsamp)
+    if (Trendtype<3){
+      StratR[idx] = rep(Strata_trends[j],simsamp)
+    }else{
+      StratR[idx] = rep("Whole Island",simsamp)
+    }
+    if (Nyrs < 3 & Nstrat==1){
+      r_est[idx] = sample(outdf[,which(vn=='r')],simsamp)
+    }else{
+      r_est[idx] = sample(outdf[,which(vn==paste0('r[',i,',',j,']'))],simsamp)
+    }
   }
 }
 
@@ -240,9 +300,29 @@ caterplot(out,params[parnum_r],denstrip = FALSE, reorder=FALSE,
 title(main = "Estimated rate of change", font.main = 4)
 
 dfR = data.frame(Year=YearR,Strata=StratR,r_est = r_est)
-pl2 = ggplot(data=dfR) + 
-  geom_boxplot( aes(x=factor(YearR), y=r_est, fill=factor(Strata)), position=position_dodge(1)) +
+
+if(Nstrat==1){
+  pl2 = ggplot(data=dfR) + 
+    geom_boxplot( aes(x=factor(Year), y=r_est), fill=3) +
+    scale_x_discrete(name = "Year", breaks=Yearvals[1:(Nyrs-1)], labels=as.character(Yearvals[1:(Nyrs-1)])) +
+    scale_y_continuous(name = "Estimated growth rate (r)") +
+    ggtitle(paste0('Trend(s) for ', as.character(dfR$Strata[1])))
+}else{
+  pl2 = ggplot(data=dfR) + 
+  geom_boxplot( aes(x=factor(Year), y=r_est, fill=factor(Strata)), position=position_dodge(1)) +
   scale_x_discrete(name = "Year", breaks=Yearvals[1:(Nyrs-1)], labels=as.character(Yearvals[1:(Nyrs-1)])) +
   scale_y_continuous(name = "Estimated growth rate (r)") +
-  scale_fill_discrete(name = "Strata")
+  scale_fill_discrete(name = "Strata") + ggtitle('Trend(s) by Strata')
+}
 print(pl2)
+
+if(Nstrat>1){
+  dfRR = data.frame(Year=YearR,r_est = ry_est)
+  pl3 = ggplot(data=dfRR) + 
+    geom_boxplot( aes(x=factor(Year), y=r_est)) +
+    scale_x_discrete(name = "Year", breaks=Yearvals[1:(Nyrs-1)], labels=as.character(Yearvals[1:(Nyrs-1)])) +
+    scale_y_continuous(name = "Mean Estimated growth rate (r)") + 
+    ggtitle('Trend(s) Averaged across Strata') 
+  print(pl3)
+}
+

@@ -20,6 +20,7 @@ library(lattice)
 library(reshape2)
 library(grid)
 library(stargazer)
+library(plyr)
 # Load Data ---------------------------------------------------------------
 load(loadfile1)
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")

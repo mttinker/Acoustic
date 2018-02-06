@@ -18,7 +18,7 @@ Beta ~ dgamma(.5,.1) T(0.001,)
 # sigS <- sqrt(exp(logvarS)) # variance in nest counts due to season 
 # sigY <- sqrt(exp(logvarY)) # variance in nest counts due to year 
 #
-# Half Cauchy distribution for variance priors: second param tau=1/(sd^2), where sd=guess of sigma (high end)
+# Half Cauchy distribution for variance priors: second param tau=1/(sd^2), where sd=high-end guess of sigma
 sigC ~ dt(0, 25 ,1)T(0,)
 sigD ~ dt(0, 25 ,1)T(0,)
 sigR ~ dt(0, 5 ,1)T(0,)
