@@ -15,6 +15,7 @@ library(grid)
 library(ggplot2)
 library(doParallel)
 library(reshape2)
+library(fitdistrplus)
 # Load Data ---------------------------------------------------------------
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
 attach(loadfile2); 
@@ -76,15 +77,17 @@ for (i in 1:Nyrs){
       Strat[idx] = rep(Strata_trends[s],simsamp)
       YearN[idx] = rep(i,simsamp)
       StratN[idx] = rep(s,simsamp)
-      if (max(Stratalist$Stratnum)>1){
-        CR[idx] = sample(outdf[,which(vn==paste0('C[',ii,']'))],simsamp)
-      }else{
-        CR[idx] = sample(outdf[,which(vn=='C')],simsamp)
-      }
-      DNS[idx] = alph*CR[idx]^Beta
       Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Strata_trends[s])]
-      ABND[idx] = DNS[idx]*Area      
-      Rep[idx] = RepN
+      if (length(ii)==1){
+        if (max(Stratalist$Stratnum)>1){
+          CR[idx] = sample(outdf[,which(vn==paste0('C[',ii,']'))],simsamp)
+        }else{
+          CR[idx] = sample(outdf[,which(vn=='C')],simsamp)
+        }
+        DNS[idx] = alph*CR[idx]^Beta
+        ABND[idx] = DNS[idx]*Area      
+        Rep[idx] = RepN
+      }
     }
   }
   rm(outdf)
@@ -97,9 +100,19 @@ dfT = data.frame(Year=Year,Strata=Strat,Rep=Rep,YearN=YearN,StratN=StratN,CR=CR,
 Yearvals = sort(unique(dfT$Year))
 
 if (Trendtype==3){
-  dfIsl = dcast(dfT[,c(3,4,5,8)],YearN + Rep ~ StratN, value.var='ABND')
+  dfIsl = dcast(dfT[dfT$Rep>0,c(3,4,5,8)],YearN + Rep ~ StratN, value.var='ABND')
   dfIsl$Total = apply(dfIsl[3:dim(dfIsl)[2]],1,sum,na.rm=TRUE)
   Nobs = length(dfIsl$Total)
+  # Adjust for years with not all strata measured
+  if(length(which(dfT$Rep==0))>1){
+    for (j in 2:Nstrat){
+      ii = which(!is.na(dfIsl[,2+j]))
+      fitprp = fitdist(dfIsl[ii,2+j]/dfIsl[ii,1+j],'lnorm')
+      ii = which(is.na(dfIsl[,2+j]))
+      dfIsl[ii,2+j] = dfIsl[ii,1+j]*rlnorm(ii,fitprp$estimate[1],fitprp$estimate[2])
+    }
+    dfIsl$Total = apply(dfIsl[3:(2+Nstrat)],1,sum,na.rm=TRUE)
+  }
 }
   
 # Examine data ---------------------------------------------------------
