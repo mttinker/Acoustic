@@ -4,18 +4,12 @@
 simsamp = 500;
 # 
 # Load necessary libraries (may need to install some of these)
-library(coda)
-library(mcmcplots)
-library(rjags)
-library(jagsUI)
-library(gdata)
-library(gtools)
-library(lattice)
-library(grid)
-library(ggplot2)
-library(doParallel)
-library(reshape2)
-library(fitdistrplus)
+existing_Packages<-as.list(installed.packages()[,1])
+# Add new packages you might need to this line, to check if they're installed and install missing packages
+required_Packages<-c('parallel','doParallel','mvtnorm','tidyverse','reshape2','fitdistrplus','jagsUI','coda','mcmcplots')
+missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
+if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
+invisible(lapply(required_Packages, require, character.only=T,quietly = T))
 # Load Data ---------------------------------------------------------------
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
 attach(loadfile2); 
