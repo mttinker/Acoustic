@@ -12,15 +12,15 @@ DataFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/data'
 RunFile = 'BayesCallsPower2_10'       # Plotting Script
 
 Species =  'WTSH'  # Species name for data analysis
-Yearfocal = 2017 # results file used for variance parameter estimates
+Yearfocal = 2016 # results file used for variance parameter estimates
 
 Strata_trends = c('North West Pisonia')
 
 # Set parameters for Power Analysis
-NyrsP = 10          # Number of Years of Monitoring
+NyrsP = 20          # Number of Years of Monitoring
 TRUE_r = -0.03     # Desired detectable trend (ie true trend)
 NSiteA = 45         # Number of Sites Monitored per year (Acoustic)
-Countfreq = 1       # Frequency of nest counts (counts every X years)(0=no counts)
+Countfreq = 5       # Frequency of nest counts (counts every X years)(0=no counts)
 NSiteC = 45         # Number of Sites with nest counts on count years
 NcountsPSite = 1    # Avg Number Nest count replicates per site 
 RecPsite = 10000     # Number of 15min acoustic records per site
@@ -39,7 +39,7 @@ if (Species=='WTSH') {
 # Process Filenames and directory names -------------------------------------
 #
 
-simreps = 500       # Number reps for Power analysis (recomend at least 100)
+simreps = 100       # Number reps for Power analysis (recomend at least 100)
 
 # Specify results file to use for variance parameter estimates:
 Resultsfile = c(paste0("Results_",Species,"_",Yearfocal,"_2_10"))
