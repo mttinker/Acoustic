@@ -60,7 +60,7 @@ for (i in 1:Nyrs){
       }
       sitereps = sitereps[,-1]
       CR[idx] = rowMeans(sitereps)
-      DNS[idx] = alph*CR[idx]^Beta
+      DNS[idx] = pmax(.0001,alph*CR[idx]^Beta)
       Area = dfArea$Area[as.character(dfArea$StrataName)==as.character(Strata_trends[s])]
       ABND[idx] = DNS[idx]*Area
       Year[idx] = rep(Yearfocal,simsamp)
@@ -84,7 +84,7 @@ for (i in 1:Nyrs){
         }else{
           CR[idx] = sample(outdf[,which(vn=='C')],simsamp)
         }
-        DNS[idx] = alph*CR[idx]^Beta
+        DNS[idx] = pmax(0.0001,alph*CR[idx]^Beta)
         ABND[idx] = DNS[idx]*Area      
         Rep[idx] = RepN
       }
