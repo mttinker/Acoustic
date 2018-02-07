@@ -6,15 +6,12 @@
 #
 #
 # Load necessary libraries (may need to install some of these) ------------
-library(ggplot2)
-library(dplyr)
-library(gdata)
-library(mvtnorm)
-library(stats)
-library(boot)
-library(stargazer)
-library(lme4)
-library(car)
+existing_Packages<-as.list(installed.packages()[,1])
+# Add new packages you might need to this line, to check if they're installed and install missing packages
+required_Packages<-c('lme4','mvtnorm','tidyverse','data.table','stargazer','boot','car','gdata','stats')
+missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
+if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
+invisible(lapply(required_Packages, require, character.only=T,quietly = T))
 # Load Data ---------------------------------------------------------------
 # Load results from Acoustic analysis (param values)
 attach(loadfile); 
