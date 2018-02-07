@@ -315,7 +315,8 @@ plt = ggplot(df, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
   theme(legend.position="none")
 print(plt)
 # ggsave(plt,filename=paste0('PowerAnalysis_',Species,'_NT_31May17.jpg'))
-#
+
+
 # 2) Power estimating Density Trends, Acoustic Data plus Calls to Counts Conversion Fxn
 PowerA = 100*(length(subset(PvalA,PvalA<=(1-P_signif)))/length(PvalA))
 PowerA_samp = boot(PvalA, Power_mn, R=1000)  
@@ -357,46 +358,48 @@ pltA = ggplot(dfA, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
   geom_vline(xintercept = rA_CIs[2], colour = 'magenta', linetype="dashed") +
   theme(legend.position="none")
 print(pltA)
-#
+
 # 3) Power estimating Density Trends, Counts only (Possible only if 3 or more sets of counts)
 if(npts>=3){
-  sample_Rmn <- function(x, d) {
-    return(rnorm(1,mean(x[d]), sd(x[d])/sqrt(npts)))
-  }  
-# Pval_C = median(PvalC)
-PowerC = 100*(length(subset(PvalC,PvalC<=(1-P_signif)))/length(PvalC))
-PowerC_samp = boot(PvalC, Power_mn, R=1000)  
-dfPower = rbind(dfPower, data.frame(Method = "Nest Count Density Estimate",Power=PowerC_samp$t))
-# PowerC = 100*(1-Pval_C)
-Psig_C = mean(PsigC)
-rC_CIs = colMeans(rC_CI)
-mean_r_estC = mean(rC_est)
-r_estC_bt = boot(rC_est, sample_Rmn, R=10000) 
-r_estC_bt = r_estC_bt$t
-PowersumC = data.frame(N_Years = Nyrs, True_r = TRUE_r, Sigma_r = Sigma_r,
-                      N_Sites = Ncnts, Yr_bt_Cnts = Countfreq,  
-                      RepNC_st = NcountsPSite, 
-                      Est_r = format(mean_r_estC, digits=3), 
-                      CI_r_Lo = format(rC_CIs[1], digits = 3),
-                      CI_r_Hi = format(rC_CIs[2], digits = 3),
-                      Power = format(PowerC, digits=3))
-#
-# print("Power Summary, Density estimated from Count Data Only")
-# stargazer(PowersumC, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
-# #
-dfC = data.frame(N_Sites = Ncnts, Estimate = r_estC_bt)  
-pltC = ggplot(dfC, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
-  labs(x="Estimated Population Trend", y = "Probability of Estimate") +
-  labs(title = paste0("Probability of Detecting trend, Counts Only, "),
-       subtitle = paste0("Monitor ", Nyrs, " Years, nest counts at ", Ncnts, 
-                         " sites, ", NcountsPSite, " reps per site, every ",  Countfreq, " Years" )) +
-  geom_vline(xintercept = TRUE_r, colour = 'red') +
-  annotate("text", x = TRUE_r, y = 5, label = "True r", colour = 'red', hjust = -.3) +
-  geom_vline(xintercept = rC_CIs[1], colour = 'magenta', linetype="dashed") +
-  geom_vline(xintercept = rC_CIs[2], colour = 'magenta', linetype="dashed") +
-  theme(legend.position="none")
-print(pltC)
+    sample_Rmn <- function(x, d) {
+      return(rnorm(1,mean(x[d]), sd(x[d])/sqrt(npts)))
+    }  
+  # Pval_C = median(PvalC)
+  PowerC = 100*(length(subset(PvalC,PvalC<=(1-P_signif)))/length(PvalC))
+  PowerC_samp = boot(PvalC, Power_mn, R=1000)  
+  dfPower = rbind(dfPower, data.frame(Method = "Nest Count Density Estimate",Power=PowerC_samp$t))
+  # PowerC = 100*(1-Pval_C)
+  Psig_C = mean(PsigC)
+  rC_CIs = colMeans(rC_CI)
+  mean_r_estC = mean(rC_est)
+  r_estC_bt = boot(rC_est, sample_Rmn, R=10000) 
+  r_estC_bt = r_estC_bt$t
+  PowersumC = data.frame(N_Years = Nyrs, True_r = TRUE_r, Sigma_r = Sigma_r,
+                        N_Sites = Ncnts, Yr_bt_Cnts = Countfreq,  
+                        RepNC_st = NcountsPSite, 
+                        Est_r = format(mean_r_estC, digits=3), 
+                        CI_r_Lo = format(rC_CIs[1], digits = 3),
+                        CI_r_Hi = format(rC_CIs[2], digits = 3),
+                        Power = format(PowerC, digits=3))
+  #
+  # print("Power Summary, Density estimated from Count Data Only")
+  # stargazer(PowersumC, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
+  # #
+  dfC = data.frame(N_Sites = Ncnts, Estimate = r_estC_bt)  
+  pltC = ggplot(dfC, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
+    labs(x="Estimated Population Trend", y = "Probability of Estimate") +
+    labs(title = paste0("Probability of Detecting trend, Counts Only, "),
+         subtitle = paste0("Monitor ", Nyrs, " Years, nest counts at ", Ncnts, 
+                           " sites, ", NcountsPSite, " reps per site, every ",  Countfreq, " Years" )) +
+    geom_vline(xintercept = TRUE_r, colour = 'red') +
+    annotate("text", x = TRUE_r, y = 5, label = "True r", colour = 'red', hjust = -.3) +
+    geom_vline(xintercept = rC_CIs[1], colour = 'magenta', linetype="dashed") +
+    geom_vline(xintercept = rC_CIs[2], colour = 'magenta', linetype="dashed") +
+    theme(legend.position="none")
+  print(pltC)
 }
+
+# Plot methods to compare
 pltP = ggplot(dfPower, aes(x=Method, y=Power)) +
   geom_boxplot(fill = "light blue", colour = "black",
                alpha = 0.7) +
@@ -410,22 +413,26 @@ print(pltP)
 
 Powersum$Type='Call trend'
 PowersumA$Type='Density trend from acoustics'
-PowersumC$Type='Density trend from counts only'
 
 setnames(Powersum,'N_Sites','NSiteA')
 setnames(PowersumA,'N_Sites','NSiteA')
-setnames(PowersumC,'N_Sites','NSiteC')
 setnames(Powersum,'N_CPM15_st','RecPsite')
 setnames(PowersumA,'N_CPM15_st','RecPsite')
-setnames(PowersumC,'Yr_bt_Cnts','Countfreq')
-setnames(PowersumC,'RepNC_st','NcountsPSite')
 
-PowersumCombined=bind_rows(Powersum,PowersumA,PowersumC)
+if (exists('PowersumC')) { 
+  PowersumC$Type='Density trend from counts only'
+  setnames(PowersumC,'N_Sites','NSiteC')
+  setnames(PowersumC,'Yr_bt_Cnts','Countfreq')
+  setnames(PowersumC,'RepNC_st','NcountsPSite')
+  PowersumCombined=bind_rows(Powersum,PowersumA,PowersumC) 
+} else {
+  PowersumCombined=bind_rows(Powersum,PowersumA)
+}
 PowersumCombined$P_signif=P_signif
 PowersumCombined$Species=Species
 PowersumCombined$RunDate=format(Sys.Date(),"%d%b%y")
 
-# write.table(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,sep=',')
-write.table(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,append=T,sep=',',col.names=F)
+write.table(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,sep=',')
+# write.table(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,append=T,sep=',',col.names=F)
 
 

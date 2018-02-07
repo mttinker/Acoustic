@@ -8,7 +8,7 @@ rm(list = ls())
 gc()
 
 existing_Packages<-as.list(installed.packages()[,1])
-required_Packages<-c("rstudioapi")
+required_Packages<-c("stringr")
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
@@ -17,25 +17,22 @@ start.time <- Sys.time()  # start a timer
 
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 #
-Species =  'WTSH'  # Species name for data analysis
+Species =  'HAPE'  # Species name for data analysis
 Yearfocal =  2017  # Focal year for Bayesian analysis
-subsamp =  3  # Level of Sub-sampling of entire data set: use every nth record
+subsamp =  25  # Level of Sub-sampling of entire data set: use every nth record
 data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
 QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
 prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
-# First provide a "Root Directory" within which all other folders, subfolders & files are contained
-#   NOTE: enter "current" for current folder, "above1" for 1 folder above, "above2" for 2 above, 
-#   otherwise enter path with "/" separator for sub-folders
-RootDir =  "above1"  # Examples "current" or "above1" or "C:/Users/XXXX/BayesianMethods"
-AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code is stored
+
+AnalysisFolder = 'D:/CM,Inc/Acoustic'  # Folder path within RootDir where analysis code is stored
 RunFile = 'BayesCalls2_10'       # Version of BayesCalls to run
-DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files stored
-ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
+DataFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/data'  # Folder path within RootDir where raw data files stored
+ResultsFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results'  # Folder path within RootDir where results files stored
 
 Nchains = 8
-Nburnin =  2750  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
+Nburnin =  1000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
 Nadapt =  100  # Number of adapting reps, default 100
-Totalreps = 10000 # Total desired reps (ie # simulations making up posterior)
+Totalreps = 1000 # Total desired reps (ie # simulations making up posterior)
 
 ProjectName =  'Bayesian_2018'  # Name of project (for user reference)
 ProjectYear =  2018  # Year of analysis project
@@ -155,94 +152,14 @@ TimeStepIntvl =  15  # Number of minutes in each timestep
 Nsim =  Totalreps/Nchains + Nburnin  # Total # MCMS sims: Actual saved reps = (Nsim-Nburnin) * (num Cores)
 # Process Filenames and directory names -------------------------------------
 #
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-
-if (RootDir=='current'){
-    RootDir = getwd()
-} else if(RootDir=='above1'){
-    tmp1 = getwd()
-    setwd('..')
-    RootDir = getwd()
-    setwd(tmp1)
-    rm('tmp1')
-} else if(RootDir=='above2'){
-    tmp1 = getwd()
-    setwd('..')
-    setwd('..')
-    RootDir = getwd()
-    setwd(tmp1)
-    rm('tmp1')
-} else {
-    RootDir = RootDir
-}
-#
-if (AnalysisFolder=='') {
-    RunFile = paste0(RootDir,"/",RunFile,".R")
-    AnalysisFolder = getwd()
-} else {
-    RunFile = paste0(RootDir,"/",AnalysisFolder,"/",RunFile,".R")
-    AnalysisFolder = paste0(RootDir,"/",AnalysisFolder)
-}
-#
-if (DataFolder=='') {
-    loadfile1 = paste0(RootDir,"/",Datafile)
-} else {
-    loadfile1 = paste0(RootDir,"/",DataFolder,"/",Datafile)
-}
-#
+RunFile = paste0(AnalysisFolder,"/",RunFile,".R")
+loadfile1 = paste0(DataFolder,"/",Datafile)
 if (data_opt>1){
-  if (DataFolder=='') {
-    loadfile2 =  paste0(RootDir,"/",Countsdatfile)
-  } else {
-    loadfile2 =  paste0(RootDir,"/",DataFolder,"/",Countsdatfile)
-  }
+  loadfile2 =  paste0(DataFolder,"/",Countsdatfile)
 }
+SaveResultsFile = str_replace(str_replace(basename(RunFile),'BayesCalls',''),'.R','')
+SaveResults = paste0(ResultsFolder,'/Results', '_', Species, '_', Yearfocal, '_', SaveResultsFile,".Rdata")
 
-DataFolder = paste0(RootDir,"/",DataFolder)
-ResultsFolder = paste0(RootDir,"/",ResultsFolder)
-#
-#  Function to get the name of this current user script 
-callscript <- function() {
-    # http://stackoverflow.com/a/32016824/2292993
-    cmdArgs = commandArgs(trailingOnly = FALSE)
-    needle = "--file="
-    match = grep(needle, cmdArgs)
-    if (length(match) > 0) {
-        # Rscript via command line
-        return(normalizePath(sub(needle, "", cmdArgs[match])))
-    } else {
-        ls_vars = ls(sys.frames()[[1]])
-        if ("fileName" %in% ls_vars) {
-            # Source'd via RStudio
-            return(normalizePath(sys.frames()[[1]]$fileName)) 
-        } else {
-            if (!is.null(sys.frames()[[1]]$ofile)) {
-                # Source'd via R console
-                return(normalizePath(sys.frames()[[1]]$ofile))
-            } else {
-                # RStudio Run Selection
-                # http://stackoverflow.com/a/35842176/2292993  
-                return(normalizePath(rstudioapi::getActiveDocumentContext()$path))
-            }
-        }
-    }
-}
-# Get the name of current script file, and create matching SaveResults filename 
-CallingScript = callscript()
-# SaveResults = CallingScript
-# SaveResults = gsub("RunBC","Results",CallingScript)
-# SaveResults = paste0(SaveResults,"data")
-# 
-# SaveResults = gsub("BayesCalls","Results",RunFile)
-
-substrRight <- function(x, n){
-  substr(x, nchar(x)-n+1, nchar(x))
-}
-SaveResults = substrRight(RunFile, 6)
-SaveResults = paste0(ResultsFolder,'/Results', '_', Species, '_', Yearfocal, '_', SaveResults,"data")
-
-rm('callscript')
-rm('substrRight')
 #
 # Run Bayesian Analysis -----------------------------------------------------
 # Source BayesCalls program (specify version as X_XX, e.g. BayesCalls2_01) 
