@@ -16,15 +16,16 @@ Years = c(2014,2015,2016,2017)
 # Trendtype option: If type = 1, calculate trend for call rate, if 2 calculate for density,
 #  if 3 calculate for "TOTAL" abundance, either whole-Island or whole-region
 #   (assumes ALL strata sampled each year)
-Trendtype = 2
+Trendtype = 2 
 
-# Specify focal strata for estimating trends: 
-#   NOTE: all named strata must be present in each years data!!
-#   ALSO: If Trendtype = 3 then specify Strata for whole Island, or whole Region
+# "Strata_trends" character string used to specify focal strata for estimating trends: 
+#   NOTE: all named strata must be present in each years data UNLESS
+#    Trendtype = 3 (whole Island/region), in which case missing strata will be 
+#    interpolated, although at least 1 strata (first listed) must be present all years
 Strata_trends = c('North West Pisonia')
 
-# Can either estimate density for all sites each year (FocalSites = 0)
-#  OR for a select sequence of sites present each year (FocalSites = 1)
+# FocalSites Option: can either estimate density for all sites each year (FocalSites = 0)
+#  OR for a select sequence of sites that are present each year (FocalSites = 1)
 FocalSites = 0
 
 if (FocalSites==1) {

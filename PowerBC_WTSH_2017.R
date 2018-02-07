@@ -23,7 +23,7 @@ Countsdatfile = c(paste0('Counts_CapCays_',Species,'_2014-2017.csv')) # Name of 
 simreps = 100       # Number reps for Power analysis (recomend at least 100)
 NyrsP = 15          # Number of Years of Monitoring
 TRUE_r = -0.03     # Desired detectable trend (ie true trend)
-Sigma_r = 0.1       # Process error: standard deviation in trend over years
+Sigma_r = 0.13       # Process error: standard deviation in trend over years
 NSiteA = 40         # Number of Sites Monitored per year (Acoustic)
 Countfreq = 1       # Frequency of nest counts (counts every X years)(0=no counts)
 NSiteC = 40         # Number of Sites with nest counts on count years
