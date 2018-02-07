@@ -8,7 +8,7 @@
 # Load necessary libraries (may need to install some of these) ------------
 existing_Packages<-as.list(installed.packages()[,1])
 # Add new packages you might need to this line, to check if they're installed and install missing packages
-required_Packages<-c('lme4','mvtnorm','ggplot2','stargazer','boot')
+required_Packages<-c('lme4','mvtnorm','tidyverse','data.table','stargazer','boot')
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
@@ -298,10 +298,10 @@ if (npts > 0){
                         CI_r_Hi = format(r_CIs[2], digits = 3),
                         Power = format(PowerCR, digits=3))
 }
-print("Power Summary, Trend in Call Rate Estimated from Acoustic Data")
-stargazer(Powersum, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
-print(" ")
-print(" ")
+# print("Power Summary, Trend in Call Rate Estimated from Acoustic Data")
+# stargazer(Powersum, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
+# print(" ")
+# print(" ")
 df = data.frame(N_Sites = NSite, Estimate = r_est_bt)  
 plt = ggplot(df, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
   labs(title = paste0("Probability of Detecting trend in Call Rate"),
@@ -341,10 +341,10 @@ if (npts > 0){
                         CI_r_Hi = format(rA_CIs[2], digits = 3),
                         Power = format(PowerA, digits=3))
 }
-print("Power Summary, Density Estimated from Acoustic Data")
-stargazer(PowersumA, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
-print(" ")
-print(" ")
+# print("Power Summary, Density Estimated from Acoustic Data")
+# stargazer(PowersumA, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
+# print(" ")
+# print(" ")
 #
 dfA = data.frame(N_Sites = Ncnts, Estimate = r_estA_bt)  
 pltA = ggplot(dfA, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
@@ -381,9 +381,9 @@ PowersumC = data.frame(N_Years = Nyrs, True_r = TRUE_r, Sigma_r = Sigma_r,
                       CI_r_Hi = format(rC_CIs[2], digits = 3),
                       Power = format(PowerC, digits=3))
 #
-print("Power Summary, Density estimated from Count Data Only")
-stargazer(PowersumC, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
-#
+# print("Power Summary, Density estimated from Count Data Only")
+# stargazer(PowersumC, type = 'text', out = 'out.txt', summary=FALSE, rownames=FALSE)
+# #
 dfC = data.frame(N_Sites = Ncnts, Estimate = r_estC_bt)  
 pltC = ggplot(dfC, aes(x=Estimate, fill = NSite)) + geom_density(alpha=.3) +
   labs(x="Estimated Population Trend", y = "Probability of Estimate") +
@@ -407,3 +407,25 @@ pltP = ggplot(dfPower, aes(x=Method, y=Power)) +
          "Nest Counts at ", Ncnts, " sites, ", NcountsPSite, " reps per site, every ",  Countfreq, " Years" )) +
   theme(axis.text.x=element_text(angle=45,hjust=1)) 
 print(pltP)
+
+Powersum$Type='Call trend'
+PowersumA$Type='Density trend from acoustics'
+PowersumC$Type='Density trend from counts only'
+
+setnames(Powersum,'N_Sites','NSiteA')
+setnames(PowersumA,'N_Sites','NSiteA')
+setnames(PowersumC,'N_Sites','NSiteC')
+setnames(Powersum,'N_CPM15_st','RecPsite')
+setnames(PowersumA,'N_CPM15_st','RecPsite')
+setnames(PowersumC,'Yr_bt_Cnts','Countfreq')
+setnames(PowersumC,'RepNC_st','NcountsPSite')
+
+PowersumCombined=bind_rows(Powersum,PowersumA,PowersumC)
+PowersumCombined$P_signif=P_signif
+PowersumCombined$Species=Species
+PowersumCombined$RunDate=format(Sys.Date(),"%d%b%y")
+
+# write.csv(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F)
+write.csv(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,append=T)
+
+
