@@ -6,12 +6,15 @@
 #
 #
 # Load necessary libraries (may need to install some of these) ------------
-existing_Packages<-as.list(installed.packages()[,1])
-# Add new packages you might need to this line, to check if they're installed and install missing packages
-required_Packages<-c('lme4','mvtnorm','tidyverse','data.table','stargazer','boot')
-missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
-if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
-invisible(lapply(required_Packages, require, character.only=T,quietly = T))
+library(ggplot2)
+library(dplyr)
+library(gdata)
+library(mvtnorm)
+library(stats)
+library(boot)
+library(stargazer)
+library(lme4)
+library(car)
 # Load Data ---------------------------------------------------------------
 # Load results from Acoustic analysis (param values)
 attach(loadfile); 
@@ -201,27 +204,38 @@ for (r in 1:simreps){
   }
 }
 # Summarize sim stats ---------------------------------------------------
-D_true = colMeans(D, na.rm = "T")
+#D_true = colMeans(D, na.rm = "T")
+D_true = apply(D,2,quantile,.5)
 D_true_CIL = apply(D,2,quantile,.025)
 D_true_CIH = apply(D,2,quantile,.975)
-C_true = colMeans(C, na.rm = "T")
+# C_true = colMeans(C, na.rm = "T")
+C_true = apply(C,2,quantile,.5)
 C_true_CIL = apply(C,2,quantile,.025)
 C_true_CIH = apply(C,2,quantile,.975)
-CR_estA = colMeans(Ahat, na.rm = "T")
-CR_estA_CIL = colMeans(Ahat-1.96*(Ahatsd/sqrt(NSite)), na.rm = "T")
-CR_estA_CIH = colMeans(Ahat+1.96*(Ahatsd/sqrt(NSite)), na.rm = "T")
+# CR_estA = colMeans(Ahat, na.rm = "T")
+# CR_estA_CIL = colMeans(Ahat-1.96*(Ahatsd/sqrt(NSite)), na.rm = "T")
+# CR_estA_CIH = colMeans(Ahat+1.96*(Ahatsd/sqrt(NSite)), na.rm = "T")
+CR_estA = apply(Ahat,2,quantile,.5)
 # CR_estA_CIL = apply(Ahat,2,quantile,.05)
 # CR_estA_CIH = apply(Ahat,2,quantile,.95)
-D_estA = colMeans(DhatA, na.rm = "T")
-D_estA_CIL = colMeans(DhatA-1.96*(DhatAsd/sqrt(NSite)), na.rm = "T")
-D_estA_CIH = colMeans(DhatA+1.96*(DhatAsd/sqrt(NSite)), na.rm = "T")
+CR_estA_CIL = CR_estA -(apply(Ahat,2,sd))/sqrt(NSite)
+CR_estA_CIH = CR_estA +(apply(Ahat,2,sd))/sqrt(NSite)
+#D_estA = colMeans(DhatA, na.rm = "T")
+#D_estA_CIL = colMeans(DhatA-1.96*(DhatAsd/sqrt(NSite)), na.rm = "T")
+# D_estA_CIH = colMeans(DhatA+1.96*(DhatAsd/sqrt(NSite)), na.rm = "T")
+D_estA = apply(DhatA,2,quantile,.5)
 # D_estA_CIL = apply(DhatA,2,quantile,.05)
 # D_estA_CIH = apply(DhatA,2,quantile,.95)
-D_estC = colMeans(DhatC, na.rm = "T")
-D_estC_CIL = colMeans(DhatC-1.96*(DhatCsd/sqrt(Ncnts)), na.rm = "T")
-D_estC_CIH = colMeans(DhatC+1.96*(DhatCsd/sqrt(Ncnts)), na.rm = "T")
+D_estA_CIL = D_estA - (apply(DhatA,2,sd))/sqrt(NSite)
+D_estA_CIH = D_estA + (apply(DhatA,2,sd))/sqrt(NSite)
+# D_estC = colMeans(DhatC, na.rm = "T")
+# D_estC_CIL = colMeans(DhatC-1.96*(DhatCsd/sqrt(Ncnts)), na.rm = "T")
+# D_estC_CIH = colMeans(DhatC+1.96*(DhatCsd/sqrt(Ncnts)), na.rm = "T")
+D_estC = apply(DhatC,2,quantile,.5,na.rm = "T")
 # D_estC_CIL = apply(DhatC,2,quantile,.05,na.rm = "T")
 # D_estC_CIH = apply(DhatC,2,quantile,.95,na.rm = "T")
+D_estC_CIL = D_estC - (apply(DhatC,2,sd,na.rm = "T"))/sqrt(Ncnts)
+D_estC_CIH = D_estC + (apply(DhatC,2,sd,na.rm = "T"))/sqrt(Ncnts)
 x = seq(1,Nyrs)
 # Trend plots:
 # Call rate estimates
