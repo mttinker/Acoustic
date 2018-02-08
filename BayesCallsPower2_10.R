@@ -443,7 +443,7 @@ PowersumCombined$P_signif=P_signif
 PowersumCombined$Species=Species
 PowersumCombined$RunDate=format(Sys.Date(),"%d%b%y")
 
-write.table(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,sep=',')
-# write.table(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,append=T,sep=',',col.names=F)
+# write.table(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,sep=',')
+write.table(PowersumCombined,file='D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/tables/PowerTable.csv',row.names=F,append=T,sep=',',col.names=F)
 
 
