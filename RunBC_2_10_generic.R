@@ -17,9 +17,9 @@ start.time <- Sys.time()  # start a timer
 
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 #
-Species =  'HAPE'  # Species name for data analysis
+Species =  'BOPE'  # Species name for data analysis (HAPE,NESH,WTSH,BLNO,BOPE)
 Yearfocal =  2017  # Focal year for Bayesian analysis
-subsamp =  25  # Level of Sub-sampling of entire data set: use every nth record
+subsamp =  2  # Level of Sub-sampling of entire data set: use every nth record
 data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
 QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
 prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
@@ -136,6 +136,39 @@ if (Species=='WTSH'|Species=='BLNO') {
     peaktimes_strt =  30  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
     peaktimes_stop =  90  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
     peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
+  }
+  
+} else if (Species=='BOPE') {
+  
+  ProjectLocation = 'Midway'
+  Datafile =  paste0(ProjectLocation,'_Acoustic2_',Species,'_2016-2017.RData')  #Name of data file for analysis 
+  calendar_opt =  2  # year range: 1 = All data within calendar year, 2 = data spans New Year
+  
+  if (data_opt==2) {
+    CountsType = 'T' # T=transect, 10M=5m and 10m circles
+    Countsdatfile = c(paste0(ProjectLocation,'_Counts_',CountsType,'_',Species,'_2016-2017.csv'))
+  }
+  
+  if (Yearfocal==2017) {
+    # Analysis period
+    DayOfYear_strt =  335  # Nov 30 2016
+    DayOfYear_end =  191  # Jul 10 2017
+  } else if (Yearfocal==2016) {
+    DayOfYear_strt =  334  # Nov 30 2015
+    DayOfYear_end =  192  # Jul 10 2016
+  }
+  
+  # set peak dates (DOY not day of survey)
+  # TODO: figure this out!!!
+  peakdates_strt = 32 # Feb 1
+  if (Yearfocal==2016) { peakdates_end = 106 } else { peakdates_end = 105 } # Mar 31
+  calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
+  peaktimes_strt =  50  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
+  peaktimes_stop =  110  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
+  peaktimes_ref =  1  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
+  
+  if (prior_opt==2) {
+    PriorResultsFile =  c()  # OPTIONAL: if prior_opt = 2, Rdata file containing parameter priors
   }
   
 }
