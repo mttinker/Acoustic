@@ -18,7 +18,7 @@ start.time <- Sys.time()  # start a timer
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 #
 Species =  'BOPE'  # Species name for data analysis (HAPE,NESH,WTSH,BLNO,BOPE)
-Yearfocal =  2017  # Focal year for Bayesian analysis
+Yearfocal =  2016  # Focal year for Bayesian analysis
 subsamp =  2  # Level of Sub-sampling of entire data set: use every nth record
 data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
 QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
@@ -159,9 +159,8 @@ if (Species=='WTSH'|Species=='BLNO') {
   }
   
   # set peak dates (DOY not day of survey)
-  # TODO: figure this out!!!
   peakdates_strt = 32 # Feb 1
-  if (Yearfocal==2016) { peakdates_end = 106 } else { peakdates_end = 105 } # Mar 31
+  if (Yearfocal==2016) { peakdates_end = 106 } else { peakdates_end = 105 } # Apr 15
   calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
   peaktimes_strt =  50  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
   peaktimes_stop =  110  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
