@@ -9,7 +9,7 @@ invisible(lapply(required_Packages, require, character.only=T,quietly = T))
 # LOAD RAW DATA --------------------------------------------------------------------
 setwd(DataFolder)
 dfC = read.csv(file = loaddat, header = TRUE, sep = ",")
-dfA = read.csv(file = loadAdat, header = TRUE, sep = ",")
+# dfA = read.csv(file = loadAdat, header = TRUE, sep = ",")
 setwd(AnalysisFolder)
 SPIDnc = as.character(dfC$SPID)
 SPIDnf = factor(SPIDnc)
