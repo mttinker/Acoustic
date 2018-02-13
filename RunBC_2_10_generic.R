@@ -8,7 +8,7 @@ rm(list = ls())
 gc()
 
 existing_Packages<-as.list(installed.packages()[,1])
-required_Packages<-c("stringr")
+required_Packages<-c("stringr",'beepr')
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
@@ -202,3 +202,4 @@ Totalend.time <- Sys.time()
 Totaltime.taken <- start.time - Totalend.time
 Totaltime.taken
 
+beep('mario')
