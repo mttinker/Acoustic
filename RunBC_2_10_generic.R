@@ -19,20 +19,20 @@ start.time <- Sys.time()  # start a timer
 #
 Species =  'BOPE'  # Species name for data analysis (HAPE,NESH,WTSH,BLNO,BOPE)
 Yearfocal =  2016  # Focal year for Bayesian analysis
-subsamp =  2  # Level of Sub-sampling of entire data set: use every nth record
+subsamp =  3  # Level of Sub-sampling of entire data set: use every nth record
 data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
-QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
+QC_opt = 1   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
 prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
 
-AnalysisFolder = 'D:/CM,Inc/Acoustic'  # Folder path within RootDir where analysis code is stored
+AnalysisFolder = '/home/cmi/bope_cloud_run'  # Folder path within RootDir where analysis code is stored
 RunFile = 'BayesCalls2_10'       # Version of BayesCalls to run
-DataFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/data'  # Folder path within RootDir where raw data files stored
-ResultsFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results'  # Folder path within RootDir where results files stored
+DataFolder = '/home/cmi/bope_cloud_run'  # Folder path within RootDir where raw data files stored
+ResultsFolder = '/home/cmi/bope_cloud_run'  # Folder path within RootDir where results files stored
 
 Nchains = 8
-Nburnin =  1000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
+Nburnin =  2750  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
 Nadapt =  100  # Number of adapting reps, default 100
-Totalreps = 1000 # Total desired reps (ie # simulations making up posterior)
+Totalreps = 10000 # Total desired reps (ie # simulations making up posterior)
 
 ProjectName =  'Bayesian_2018'  # Name of project (for user reference)
 ProjectYear =  2018  # Year of analysis project
@@ -138,7 +138,7 @@ if (Species=='WTSH'|Species=='BLNO') {
     peaktimes_ref =  2  # Reference event: 1 = after sunset, 2 = before sunrise, 3 = sunrise AND sunset 
   }
   
-} else if (Species=='BOPE') {
+} else if (Species=='BOPE'|Species=='Aerial'|str_detect(Species,'Growl')) {
   
   ProjectLocation = 'Midway'
   Datafile =  paste0(ProjectLocation,'_Acoustic2_',Species,'_2016-2017.RData')  #Name of data file for analysis 
@@ -146,7 +146,7 @@ if (Species=='WTSH'|Species=='BLNO') {
   
   if (data_opt==2) {
     CountsType = 'T' # T=transect, 10M=5m and 10m circles
-    Countsdatfile = c(paste0(ProjectLocation,'_Counts_',CountsType,'_',Species,'_2016-2017.csv'))
+    Countsdatfile = c(paste0(ProjectLocation,'_Counts_',CountsType,'_BOPE_2016-2017.csv'))
   }
   
   if (Yearfocal==2017) {
@@ -203,3 +203,4 @@ Totaltime.taken <- start.time - Totalend.time
 Totaltime.taken
 
 beep('mario')
+
