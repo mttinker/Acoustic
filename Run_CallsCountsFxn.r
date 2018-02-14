@@ -15,13 +15,27 @@ RunFile = 'CallsCountsFxn2_10'
 diagnostic_plots=T
 
 Species =  'BOPE'  # Species name for data analysis
-ProjectLocation = 'Midway' # Midway, Kauai, CapCays
-if (ProjectLocation=='Midway') {
-  StrataType = 'Habitat' # Habitat or Flyover
-  CountType = '10M' # Only fill in for Midway, 10M or T
+
+# Midway, Kauai, CapCays
+if (Species=='BOPE') {
+  ProjectLocation='Midway'
+  StartYear = 2016
+  StopYear = 2017
+} else if (Species=='WTSH'|Species=='BLNO') {
+  ProjectLocation='CapCays'
+  StartYear = 2014
+  StopYear = 2016
+} else if (Species=='HAPE|NESH') {
+  ProjectLocation='Kauai'
+  StartYear = 2012
+  StopYear = 2017
 }
-StartYear = 2016
-StopYear = 2017
+
+StrataType = ''; CountType = ''
+if (ProjectLocation=='Midway') {
+  StrataType = '_Habitat' # Habitat or Flyover
+  CountType = '_10M' # Only fill in for Midway, 10M or T
+}
 
 Nchains = 8
 Nburnin =  8000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
@@ -41,7 +55,7 @@ simsamp = 100;
 Resultsfiles = c()
 for (i in StartYear:StopYear) {
   if (ProjectLocation=='Midway') {
-    Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10_',StrataType))
+    Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10',StrataType))
   } else {
     Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10'))
   }
@@ -52,13 +66,13 @@ if (ProjectLocation=='CapCays') {
   Areasdatfile = c(paste0('CapCays_StrataArea_ALL.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   Seasondefine = c(2,2,1,1,1,3,3,3,3,3,3,2)
 } else if (ProjectLocation=='Midway') {
-  Countsdatfile = c(paste0(ProjectLocation,'_Counts_',CountType,'_',Species,'_2016-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+  Countsdatfile = c(paste0(ProjectLocation,'_Counts',CountType,'_',Species,'_2016-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   # Areasdatfile = c(paste0('CapCays_StrataArea_ALL.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
-  Seasondefine = c(1,2,3,4,4,4,4,4,4,4,4,4)
+  Seasondefine = c(1,2,3,3,3,3,3,3,3,3,3,3)
 }
 
 
-savename = paste0(Species, "_", RunFile, ".Rdata")
+savename = paste0(Species, "_", RunFile,CountType,".Rdata")
 RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
 loadfiles = paste0(ResultsFolder,"/",Resultsfiles,".Rdata")
 loaddat = paste0(DataFolder,"/",Countsdatfile)

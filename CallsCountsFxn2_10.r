@@ -1,7 +1,7 @@
 
 # Load packages ------------------------------------------------------------------
 existing_Packages<-as.list(installed.packages()[,1])
-required_Packages<-c("readxl","lubridate","stringr",'tidyverse','mcmcplots','stats',"gtools","coda",'gdata','lattice','parallel','fitdistrplus',"rjags","jagsUI","doParallel")
+required_Packages<-c("readxl","lubridate","stringr",'ggrepel','tidyverse','mcmcplots','stats',"gtools","coda",'gdata','lattice','parallel','fitdistrplus',"rjags","jagsUI","doParallel")
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
@@ -68,7 +68,7 @@ for (i in 1:Nyrs){
       }
       
       dfCalls = rbind(dfCalls,data.frame(Year=Yearfocal,
-                                         Site=as.character(Sitelist$SPIDc[1]), 
+                                         Site=as.character(Sitelist$SPIDc[s]), 
                                          SiteN=Nst, 
                                          CR = samptmp))
       Vvals[Nst] = var(samptmp)
@@ -86,7 +86,10 @@ NObs = dim(dfCalls)[1]
 Ncounts = dim(dfCounts)[1]
 Year = dfCounts$Year - min(dfCounts$Year) + 1
 NYrs = max(Year)
-Radius = dfCounts$Radius/10
+# Radius = dfCounts$Radius/10
+# NRads = max(Radius)
+# min(dfCounts$Radius)
+Radius = dfCounts$Radius/min(dfCounts$Radius)
 NRads = max(Radius)
 NSeas = max(dfCounts$Season)
 x = CRmn
@@ -197,6 +200,18 @@ if (diagnostic_plots) {
 }
 
 # Function plots --------------------------------------------------------
+
+Sites<-filter(as.data.frame(table(dfCalls$Year,dfCalls$Site,dfCalls$SiteN)),Freq>0)
+Sites<-arrange(Sites,Var3)
+Sites$Label = paste(Sites$Var2,Sites$Var1)
+
+if (ProjectLocation=='Midway') {
+  sitesite = c('BOPE04 2016','BOPE05 2016','BOPE06 2016','BOPE01 2016','BOPE02 2016','BOPE03 2016',
+               'BOPE04 2017','BOPE05 2017','BOPE06 2017','BOPE01 2017','BOPE07 2017','BOPE02 2017','BOPE03 2017')
+} else if (ProjectLocation=='CapCays') {
+  sitesite = Sites$Label
+}
+
 xx =  s_stats[which(startsWith(vn,'Csite')),1]
 yy = s_stats[which(startsWith(vn,'DensN')),1]
 #fx = s_stats[which(startsWith(vn,'Dens[')),1]
@@ -235,19 +250,22 @@ pxL=qlnorm(0.05,mu,sig)
 pxH=qlnorm(0.95,mu,sig)
 
 dfSites = data.frame(xx=xx,yy=yy,xxL=xxL,xxH=xxH,yyL=yyL,yyH=yyH,xobs=CRmn,
-                     yobs=NCmn)
+                     yobs=NCmn,sitesite=sitesite)
 dfFxn = data.frame(xi=xi,yi=yi,fxL=fxL,fxH=fxH,pxL=pxL,pxH=pxH)
 
 Convertplot = ggplot()+
-  geom_ribbon(data=dfFxn,aes(ymin=pxL, ymax=pxH, x=xi), alpha = 0.15)+
-  geom_ribbon(data=dfFxn,aes(ymin=fxL, ymax=fxH, x=xi), alpha = 0.25)+
-  geom_line(data=dfFxn,aes(x=xi, y=yi))+
-  geom_point(data=dfSites,aes(x=xx,y=yy,size=1))+
-  geom_point(data=dfCounts,aes(x=CRmean,y=DensObsNC, colour = "red"))+
-  geom_errorbar(data=dfSites,aes(x=xx,ymax=yyH,ymin=yyL,width=0))+
-  geom_errorbarh(data=dfSites,aes(x=xx,y=yy,xmax=xxH,xmin=xxL))+
+  geom_ribbon(data=dfFxn,aes(ymin=pxL, ymax=pxH, x=xi), alpha = 0.15) +
+  geom_ribbon(data=dfFxn,aes(ymin=fxL, ymax=fxH, x=xi), alpha = 0.25) +
+  geom_line(data=dfFxn,aes(x=xi, y=yi)) +
+  geom_point(data=dfSites,aes(x=xx,y=yy,size=1)) +
+  geom_point(data=dfCounts,aes(x=CRmean,y=DensObsNC, colour = "red")) +
+  geom_text_repel(data=dfSites,aes(x=xx,y=yy,label=sitesite),point.padding=0.25) +
+  geom_errorbar(data=dfSites,aes(x=xx,ymax=yyH,ymin=yyL,width=0)) +
+  geom_errorbarh(data=dfSites,aes(x=xx,y=yy,xmax=xxH,xmin=xxL)) +
+  # scale_x_continuous(limits=c(0,5.5)) +
   xlab("Call Rate") + ylab("Nest Density") +
   theme(legend.position='none')
 print(Convertplot)
-ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/ConversionPlot_',Species,'_reps',Totalreps,'_burnin',Nburnin,'.jpg'))
+# ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/plots/ConversionPlot_',Species,'_reps',Totalreps,'_burnin',Nburnin,'.jpg'))
+ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/plots/',ProjectLocation,'_',Species,'_ConversionPlot',CountType,'.jpg'))
 save(list = ls(all.names = TRUE),file=SaveResults)
