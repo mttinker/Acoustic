@@ -253,19 +253,52 @@ dfSites = data.frame(xx=xx,yy=yy,xxL=xxL,xxH=xxH,yyL=yyL,yyH=yyH,xobs=CRmn,
                      yobs=NCmn,sitesite=sitesite)
 dfFxn = data.frame(xi=xi,yi=yi,fxL=fxL,fxH=fxH,pxL=pxL,pxH=pxH)
 
-Convertplot = ggplot()+
-  geom_ribbon(data=dfFxn,aes(ymin=pxL, ymax=pxH, x=xi), alpha = 0.15) +
-  geom_ribbon(data=dfFxn,aes(ymin=fxL, ymax=fxH, x=xi), alpha = 0.25) +
-  geom_line(data=dfFxn,aes(x=xi, y=yi)) +
-  geom_point(data=dfSites,aes(x=xx,y=yy,size=1)) +
-  geom_point(data=dfCounts,aes(x=CRmean,y=DensObsNC, colour = "red")) +
-  geom_text_repel(data=dfSites,aes(x=xx,y=yy,label=sitesite),point.padding=0.25) +
-  geom_errorbar(data=dfSites,aes(x=xx,ymax=yyH,ymin=yyL,width=0)) +
-  geom_errorbarh(data=dfSites,aes(x=xx,y=yy,xmax=xxH,xmin=xxL)) +
-  # scale_x_continuous(limits=c(0,5.5)) +
-  xlab("Call Rate") + ylab("Nest Density") +
-  theme(legend.position='none')
+if (Species=='BLNO') {
+  ylabel='Nest Density \n'
+} else {
+  ylabel='Burrow Density \n'
+}
+
+if (ProjectLocation=='CapCays') {
+  Convertplot = ggplot()+
+    geom_ribbon(data=dfFxn,aes(ymin=pxL, ymax=pxH, x=xi), alpha = 0.15) +
+    geom_ribbon(data=dfFxn,aes(ymin=fxL, ymax=fxH, x=xi), alpha = 0.25) +
+    geom_line(data=dfFxn,aes(x=xi, y=yi)) +
+    geom_point(data=dfSites,aes(x=xx,y=yy,size=1)) +
+    # geom_point(data=dfCounts,aes(x=CRmean,y=DensObsNC, colour = "red")) +
+    # geom_text_repel(data=dfSites,aes(x=xx,y=yy,label=sitesite),point.padding=0.25) +
+    geom_errorbar(data=dfSites,aes(x=xx,ymax=yyH,ymin=yyL,width=0)) +
+    geom_errorbarh(data=dfSites,aes(x=xx,y=yy,xmax=xxH,xmin=xxL)) +
+    # scale_x_continuous(limits=c(0,5.5)) +
+    xlab("\n Call Rate") + ylab(ylabel) +
+    theme_bw() +
+    theme(legend.position='none',
+          axis.text.x=element_text(size=15,margin=margin(10,0,0,0)),
+          axis.text.y=element_text(size=15,margin=margin(0,10,0,0)),
+          axis.title.x= element_text(margin=margin(10,0,0,0),size=rel(1.5),vjust=0.01, hjust=0.5,face="bold"),
+          axis.title.y= element_text(margin=margin(0,10,0,0),angle=90,size=rel(1.5),vjust=0.3, hjust=0.5,face="bold"))
+} else {
+  Convertplot = ggplot()+
+    geom_ribbon(data=dfFxn,aes(ymin=pxL, ymax=pxH, x=xi), alpha = 0.15) +
+    geom_ribbon(data=dfFxn,aes(ymin=fxL, ymax=fxH, x=xi), alpha = 0.25) +
+    geom_line(data=dfFxn,aes(x=xi, y=yi)) +
+    geom_point(data=dfSites,aes(x=xx,y=yy,size=1)) +
+    # geom_point(data=dfCounts,aes(x=CRmean,y=DensObsNC, colour = "red")) +
+    # geom_text_repel(data=dfSites,aes(x=xx,y=yy,label=sitesite),point.padding=0.25) +
+    geom_errorbar(data=dfSites,aes(x=xx,ymax=yyH,ymin=yyL,width=0)) +
+    geom_errorbarh(data=dfSites,aes(x=xx,y=yy,xmax=xxH,xmin=xxL)) +
+    # scale_x_continuous(limits=c(0,5.5)) +
+    xlab("\n Call Rate") + ylab(ylabel) +
+    theme_bw() +
+    theme(legend.position='none',
+          axis.text.x=element_text(size=15,margin=margin(10,0,0,0)),
+          axis.text.y=element_text(size=15,margin=margin(0,10,0,0)),
+          axis.title.x= element_text(margin=margin(10,0,0,0),size=rel(1.5),vjust=0.01, hjust=0.5,face="bold"),
+          axis.title.y= element_text(margin=margin(0,10,0,0),angle=90,size=rel(1.5),vjust=0.3, hjust=0.5,face="bold"))
+}
+
 print(Convertplot)
 # ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/plots/ConversionPlot_',Species,'_reps',Totalreps,'_burnin',Nburnin,'.jpg'))
-ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/plots/',ProjectLocation,'_',Species,'_ConversionPlot',CountType,'.jpg'))
+ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/plots/',ProjectLocation,'_',Species,'_ConversionPlot',CountType,'.jpg'),
+       height=5, width=6.5, units='in', scale=2)
 save(list = ls(all.names = TRUE),file=SaveResults)

@@ -3,6 +3,8 @@
 # (allows estimating density from call rate)
 # 
 
+library(stringr)
+
 rm(list=ls())
 gc()
 
@@ -12,12 +14,12 @@ ResultsFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/re
 DataFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/data'
 RunFile = 'CallsCountsFxn2_10'
 
-diagnostic_plots=T
+diagnostic_plots=F
 
-Species =  'BOPE'  # Species name for data analysis
+Species =  'Growl_new'  # Species name for data analysis
 
 # Midway, Kauai, CapCays
-if (Species=='BOPE') {
+if (Species=='BOPE'|Species=='Aerial'|str_detect(Species,'Growl')) {
   ProjectLocation='Midway'
   StartYear = 2016
   StopYear = 2017
@@ -55,7 +57,7 @@ simsamp = 100;
 Resultsfiles = c()
 for (i in StartYear:StopYear) {
   if (ProjectLocation=='Midway') {
-    Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10',StrataType))
+    Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10'))
   } else {
     Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10'))
   }
@@ -66,7 +68,7 @@ if (ProjectLocation=='CapCays') {
   Areasdatfile = c(paste0('CapCays_StrataArea_ALL.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   Seasondefine = c(2,2,1,1,1,3,3,3,3,3,3,2)
 } else if (ProjectLocation=='Midway') {
-  Countsdatfile = c(paste0(ProjectLocation,'_Counts',CountType,'_',Species,'_2016-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+  Countsdatfile = c(paste0(ProjectLocation,'_Counts',CountType,'_BOPE_2016-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   # Areasdatfile = c(paste0('CapCays_StrataArea_ALL.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   Seasondefine = c(1,2,3,3,3,3,3,3,3,3,3,3)
 }
