@@ -13,6 +13,14 @@ RunFile = 'BayesCallsTrends2_10'
 Species =  'BLNO'  # Species name for data analysis
 Years = c(2014,2015,2016,2017)
 
+if(Species=='BLNO'|Species=='WTSH') {
+  ProjectLocation='CapCays'
+} else if (Species=='HAPE'|Species=='NESH') {
+  ProjectLocation='Kauai'
+} else if (Species=='Aerial'|str_detect(Species,'Growl')) {
+  ProjectLocation='Midway'
+}
+
 # Trendtype option: If type = 1, calculate trend for call rate, if 2 calculate for density,
 #  if 3 calculate for "TOTAL" abundance, either whole-Island or whole-region
 #   (assumes ALL strata sampled each year)
@@ -50,15 +58,14 @@ Nsim =  Totalreps/Nchains + Nburnin  # Total # MCMS sims: Actual saved reps = (N
 
 Resultsfiles = c()
 for (i in Years) {
-  Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10'))
+  Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i))
 }
-
-Convertfile = paste0(Species,'_CallsCountsFxn2_10')
-Countsdatfile = c(paste0('CapCays_Counts_',Species,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+Convertfile = paste0(ProjectLocation, '_', Species,'_CallsCountsFxn_2_10')
+Countsdatfile = c(paste0('CapCays_',Species,'_Counts_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 
 RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
-loadfiles = paste0(ResultsFolder,"/",Resultsfiles,".Rdata")
-loadfile2 = paste0(ResultsFolder,"/",Convertfile,".Rdata")
-Areasdatfile = paste0(DataFolder,'/CapCays_StrataArea_ALL.csv')
+loadfiles = paste0(ResultsFolder,"/",ProjectLocation,'/',Resultsfiles,".Rdata")
+loadfile2 = paste0(ResultsFolder,"/",ProjectLocation,'/',Convertfile,".Rdata")
+Areasdatfile = paste0(DataFolder,'/CapCays/CapCays_StrataArea_ALL.csv')
 
 source(RunFile)

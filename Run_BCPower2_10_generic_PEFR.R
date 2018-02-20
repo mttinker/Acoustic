@@ -18,6 +18,14 @@ Yearfocal = 2016 # results file used for variance parameter estimates
 
 Strata_trends = c('North West Pisonia')
 
+if(Species=='BLNO'|Species=='WTSH') {
+  ProjectLocation='CapCays'
+} else if (Species=='HAPE'|Species=='NESH') {
+  ProjectLocation='Kauai'
+} else if (Species=='Aerial'|str_detect(Species,'Growl')) {
+  ProjectLocation='Midway'
+}
+
 # Set parameters for Power Analysis
 NyrsP = 10          # Number of Years of Monitoring
 TRUE_r = -0.035     # Desired detectable trend (ie true trend)
@@ -44,15 +52,15 @@ if (Species=='WTSH') {
 simreps = 1500       # Number reps for Power analysis (recomend at least 100)
 
 # Specify results file to use for variance parameter estimates:
-Resultsfile = c(paste0("Results_",Species,"_",Yearfocal,"_2_10"))
-Convertfile = paste0(Species,'_CallsCountsFxn2_10')
-Countsdatfile = c(paste0('CapCays_Counts_',Species,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+Resultsfile = c(paste0(ProjectLocation, '_', Species, '_Results_2_10_', Yearfocal))
+Convertfile = paste0(ProjectLocation, '_', Species,'_CallsCountsFxn_2_10')
+Countsdatfile = c(paste0('CapCays_',Species,'_Counts_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 
 RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
-loadfile = paste0(ResultsFolder,"/",Resultsfile,".Rdata")
-loadfile2 = paste0(ResultsFolder,"/",Convertfile,".Rdata")
-Areasdatfile = paste0(DataFolder,'/CapCays_StrataArea_ALL.csv')
-loadCdat = paste0(DataFolder,"/",Countsdatfile)
+loadfile = paste0(ResultsFolder,"/",ProjectLocation,'/',Resultsfile,".Rdata")
+loadfile2 = paste0(ResultsFolder,"/",ProjectLocation,'/',Convertfile,".Rdata")
+Areasdatfile = paste0(DataFolder,'/CapCays/CapCays_StrataArea_ALL.csv')
+loadCdat = paste0(DataFolder,"/",ProjectLocation,'/',Countsdatfile)
 
 source(RunFile)
 

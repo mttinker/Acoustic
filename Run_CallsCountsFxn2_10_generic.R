@@ -56,11 +56,7 @@ simsamp = 100;
 
 Resultsfiles = c()
 for (i in StartYear:StopYear) {
-  if (ProjectLocation=='Midway') {
     Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i))
-  } else {
-    Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i))
-  }
 }
 
 if (ProjectLocation=='CapCays') {
