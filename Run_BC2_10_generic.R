@@ -17,10 +17,10 @@ start.time <- Sys.time()  # start a timer
 
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 #
-Species =  'BOPE'  # Species name for data analysis (HAPE,NESH,WTSH,BLNO,BOPE)
+Species =  'Growl_old'  # Species name for data analysis (HAPE,NESH,WTSH,BLNO,BOPE:Aerial,Growl_old,Growl_new)
 Yearfocal =  2016  # Focal year for Bayesian analysis
 subsamp =  3  # Level of Sub-sampling of entire data set: use every nth record
-data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
+data_opt =  2  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
 QC_opt = 1   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
 prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
 
@@ -39,11 +39,11 @@ ProjectYear =  2018  # Year of analysis project
 
 if (Species=='WTSH'|Species=='BLNO') {
   ProjectLocation = 'CapCays'
-  Datafile =  paste0(ProjectLocation,'_Acoustic2_',Species,'_2014-2017_NoAudit.RData')  #Name of data file for analysis 
+  Datafile =  paste0(ProjectLocation,'_Data_2_10_',Species,'_2014-2017_NoAudit.RData')  #Name of data file for analysis 
   calendar_opt =  2  # year range: 1 = All data within calendar year, 2 = data spans New Year
   
   if (data_opt==2) {
-    Countsdatfile = c(paste0(ProjectLocation,'_Counts_',Species,'_2014-2017.csv'))
+    Countsdatfile = c(paste0(ProjectLocation,'_',species,'_Counts_',CountType,'_2014-2017.csv'))
   }
   
   if (Yearfocal==2017) {
@@ -89,7 +89,7 @@ if (Species=='WTSH'|Species=='BLNO') {
   
 } else if (Species=='HAPE'|Species=='NESH') {
   ProjectLocation = 'Kauai'
-  Datafile =  paste0(ProjectLocation,'_Acoustic2_',Species,'_2012-2017.RData')  #Name of data file for analysis 
+  Datafile =  paste0(ProjectLocation,'_Data_2_10_',Species,'_2012-2017.RData')  #Name of data file for analysis 
   calendar_opt =  1  # year range: 1 = All data within calendar year, 2 = data spans New Year
   calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
   
@@ -141,12 +141,12 @@ if (Species=='WTSH'|Species=='BLNO') {
 } else if (Species=='BOPE'|Species=='Aerial'|str_detect(Species,'Growl')) {
   
   ProjectLocation = 'Midway'
-  Datafile =  paste0(ProjectLocation,'_Acoustic2_',Species,'_2016-2017.RData')  #Name of data file for analysis 
+  Datafile =  paste0(ProjectLocation,'_',Species,'_Data_2_10_2016-2017.RData')  #Name of data file for analysis 
   calendar_opt =  2  # year range: 1 = All data within calendar year, 2 = data spans New Year
   
   if (data_opt==2) {
-    CountsType = 'T' # T=transect, 10M=5m and 10m circles
-    Countsdatfile = c(paste0(ProjectLocation,'_Counts_',CountsType,'_BOPE_2016-2017.csv'))
+    CountType = 'T' # T=transect, 10M=5m and 10m circles
+    Countsdatfile = c(paste0(ProjectLocation,'_BOPE_Counts_',CountType,'_2016-2017.csv'))
   }
   
   if (Yearfocal==2017) {
@@ -189,8 +189,8 @@ loadfile1 = paste0(DataFolder,"/",Datafile)
 if (data_opt>1){
   loadfile2 =  paste0(DataFolder,"/",Countsdatfile)
 }
-SaveResultsFile = str_replace(str_replace(basename(RunFile),'BayesCalls',''),'.R','')
-SaveResults = paste0(ResultsFolder,'/Results', '_', Species, '_', Yearfocal, '_', SaveResultsFile,".Rdata")
+BayesModelVersion = str_replace(str_replace(basename(RunFile),'BayesCalls',''),'.R','')
+SaveResults = paste0(ResultsFolder,'/', ProjectLocation,'/', ProjectLocation, '_', Species, '_Results_',BayesModelVersion,'_',Yearfocal,".Rdata")
 
 #
 # Run Bayesian Analysis -----------------------------------------------------

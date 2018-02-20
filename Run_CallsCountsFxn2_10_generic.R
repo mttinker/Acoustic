@@ -35,8 +35,8 @@ if (Species=='BOPE'|Species=='Aerial'|str_detect(Species,'Growl')) {
 
 StrataType = ''; CountType = ''
 if (ProjectLocation=='Midway') {
-  StrataType = '_Habitat' # Habitat or Flyover
-  CountType = '_10M' # Only fill in for Midway, 10M or T
+  # StrataType = '_Habitat' # Habitat or Flyover
+  CountType = '_T' # Only fill in for Midway, 10M or T
 }
 
 Nchains = 8
@@ -57,29 +57,28 @@ simsamp = 100;
 Resultsfiles = c()
 for (i in StartYear:StopYear) {
   if (ProjectLocation=='Midway') {
-    Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10'))
+    Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i))
   } else {
-    Resultsfiles = c(Resultsfiles,paste0('Results_',Species,'_',i,'_2_10'))
+    Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i))
   }
 }
 
 if (ProjectLocation=='CapCays') {
-  Countsdatfile = c(paste0(ProjectLocation,'_Counts_',Species,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+  Countsdatfile = c(paste0(ProjectLocation,'_',Species,'_Counts_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   Areasdatfile = c(paste0('CapCays_StrataArea_ALL.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   Seasondefine = c(2,2,1,1,1,3,3,3,3,3,3,2)
 } else if (ProjectLocation=='Midway') {
-  Countsdatfile = c(paste0(ProjectLocation,'_Counts',CountType,'_BOPE_2016-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+  Countsdatfile = c(paste0(ProjectLocation,'_BOPE_Counts',CountType,'_2016-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   # Areasdatfile = c(paste0('CapCays_StrataArea_ALL.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   Seasondefine = c(1,2,3,3,3,3,3,3,3,3,3,3)
 }
 
-
-savename = paste0(Species, "_", RunFile,CountType,".Rdata")
+savename = paste0(ProjectLocation, '_', Species, '_CallsCountsFxn_2_10', CountType, ".Rdata")
 RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
-loadfiles = paste0(ResultsFolder,"/",Resultsfiles,".Rdata")
-loaddat = paste0(DataFolder,"/",Countsdatfile)
+loadfiles = paste0(ResultsFolder,"/",ProjectLocation,'/',Resultsfiles,".Rdata")
+loaddat = paste0(DataFolder,"/",ProjectLocation,'/',Countsdatfile)
 # loadAdat = paste0(DataFolder,"/",Areasdatfile)
-SaveResults = paste0(ResultsFolder,"/",savename)
+SaveResults = paste0(ResultsFolder,"/",ProjectLocation,'/',savename)
 
 source(RunFile)
 
