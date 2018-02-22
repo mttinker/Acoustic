@@ -40,6 +40,15 @@ for(file in list.files(path = 'D:/CM,Inc/R-Code_improvements/Functions/',pattern
 
 # Data Load -------------------------------------------------------------------
 
+# Site info
+SiteTypeRegion_Info<-read.csv(file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_SiteInfo_ALL.csv')))
+if (StrataType=='Habitat') {SiteTypeRegion_Info$StrataName=paste(SiteTypeRegion_Info$Island,SiteTypeRegion_Info$Habitat)} else if (StrataType=='Flyover') {SiteTypeRegion_Info$StrataName=paste(SiteTypeRegion_Info$Island,SiteTypeRegion_Info$Flyover)}
+
+# Counts
+# Counts<-read.csv("D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2016/USFWS_BOPE_2016/Field_Data/USFWS_BOPE_Density_16-17.csv")
+Counts<-read.csv("D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2016/USFWS_BOPE_2016/Field_Data/USFWS_BOPE_Density_16-17_PEFR.csv")
+CountsInfo<-read.csv("D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2016/USFWS_BOPE_2016/Field_Data/USFWS_BOPE_2016_Counts_Info.csv")
+
 if (species=='Growl_new') {
     data_ALL<-readRDS('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2016/USFWS_BOPE_2016/R_output/AnalysisData_USFWS_BOPE_2016_Growlthresh0.9_combined_15Dec17.Rda')
 } else if (species=='Growl_old') {
@@ -82,8 +91,6 @@ data_ALL<-subset(data_ALL,!duplicated(data_ALL$key))
 data_ALL<-fixDatesTimes(data_ALL,TimeZone)
 
 # bring in site type/region
-SiteTypeRegion_Info<-read.csv(file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_SiteInfo_ALL.csv')))
-if (StrataType=='Habitat') {SiteTypeRegion_Info$StrataName=paste(SiteTypeRegion_Info$Island,SiteTypeRegion_Info$Habitat)} else if (StrataType=='Flyover') {SiteTypeRegion_Info$StrataName=paste(SiteTypeRegion_Info$Island,SiteTypeRegion_Info$Flyover)}
 nrow(data_ALL)
 data_ALL<-select(data_ALL,-c(Easting,Northing,Latitude,Longitude,Elevation))
 data_ALL<-select(data_ALL,-c(Easting,Northing))
@@ -154,28 +161,25 @@ save(BayesianData,species,TimeStepOne,today,file = file.path(Dropbox,ProjectYear
 
 # Prepare count data -------------------------------------------
 
-Counts<-read.csv("D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2016/USFWS_BOPE_2016/Field_Data/USFWS_BOPE_Density_16-17.csv")
-CountsInfo<-read.csv("D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2016/USFWS_BOPE_2016/Field_Data/USFWS_BOPE_2016_Counts_Info.csv")
-
 Counts<-filter(Counts,!is.na(Density))
 
 # select and rename columns
-Counts<-select(Counts,SPID,Sensor_Name,year,Round,mid_date,Transect_10M,Radius,Density)
+Counts<-dplyr::select(Counts,SPID,Sensor_Name,year,Round,mid_date,Transect_10M,Radius,Density)
 
 # add season information
-Counts<-left_join(Counts,select(CountsInfo,year,Round,Season),by=c('year','Round'))
+Counts<-left_join(Counts,dplyr::select(CountsInfo,year,Round,Season),by=c('year','Round'))
 
 setnames(Counts,'year','contract_year')
 setnames(Counts,'Radius','Density_Radius')
 
 # add location information
-Counts<-left_join(Counts,select(SiteTypeRegion_Info,SPID,contract_year,Island,Habitat,StrataName),by=c('SPID','contract_year'))
+Counts<-left_join(Counts,dplyr::select(SiteTypeRegion_Info,SPID,contract_year,Island,Habitat,StrataName),by=c('SPID','contract_year'))
 
 Counts$Count_Date=Counts$mid_date
 Counts$Count_Date[Counts$mid_date=='3/8/2017']='2/28/2017'
 
 for (CountType in c('T','10M')) {
-  CountsFinal<-select(Counts,-c(mid_date))
+  CountsFinal<-dplyr::select(Counts,-c(mid_date))
   CountsFinal<-filter(CountsFinal,Transect_10M==CountType) # only take transect densities ('T') or only take 5/10M circles (10M)
   write.csv(CountsFinal,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/data/',ProjectLocation,'/',ProjectLocation,'_BOPE_Counts_',CountType,'_',YearStart,'-',YearStop,'.csv'),row.names=F)
 }

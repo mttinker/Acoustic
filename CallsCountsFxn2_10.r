@@ -17,7 +17,7 @@ StrataNC = as.character(dfC$StrataName)
 StrataNCf = factor(StrataNC)
 YearNest = dfC$contract_year
 Densmeas = dfC$Density
-Monthmeas = month(parse_date_time(as.character(dfC$Count_Date),"mdy"))
+Monthmeas = month(parse_date_time(as.character(dfC$Count_Date),"ymd"))
 Seasmeas = Seasondefine[Monthmeas]
 Radiusmeas = dfC$Density_Radius
 dfCounts <- data.frame(Year=numeric(),
@@ -284,7 +284,7 @@ if (ProjectLocation=='CapCays') {
     geom_line(data=dfFxn,aes(x=xi, y=yi)) +
     geom_point(data=dfSites,aes(x=xx,y=yy,size=1)) +
     # geom_point(data=dfCounts,aes(x=CRmean,y=DensObsNC, colour = "red")) +
-    # geom_text_repel(data=dfSites,aes(x=xx,y=yy,label=sitesite),point.padding=0.25) +
+    geom_text_repel(data=dfSites,aes(x=xx,y=yy,label=sitesite),point.padding=0.25) +
     geom_errorbar(data=dfSites,aes(x=xx,ymax=yyH,ymin=yyL,width=0)) +
     geom_errorbarh(data=dfSites,aes(x=xx,y=yy,xmax=xxH,xmin=xxL)) +
     # scale_x_continuous(limits=c(0,5.5)) +
@@ -299,6 +299,6 @@ if (ProjectLocation=='CapCays') {
 
 print(Convertplot)
 # ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/plots/ConversionPlot_',Species,'_reps',Totalreps,'_burnin',Nburnin,'.jpg'))
-ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/plots/',ProjectLocation,'_',Species,'_ConversionPlot',CountType,'.jpg'),
+ggsave(Convertplot,file=paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/results/',ProjectLocation,'/plots/',ProjectLocation,'_',Species,'_ConversionPlot',CountType,'.jpg'),
        height=5, width=6.5, units='in', scale=2)
 save(list = ls(all.names = TRUE),file=SaveResults)
