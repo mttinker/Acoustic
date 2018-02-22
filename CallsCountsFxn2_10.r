@@ -150,7 +150,7 @@ inits <- function(){
 }
 # List of parameters to monitor:
 params <- c('sigC','sigD','sigR','sigS','sigY','Radeff','Seaseff','Yeareff',
-            'alpha','Beta','Csite','DensN','Dens') 
+            'alpha','Beta','Csite','DensN','Dens','Err') 
 # Model to be run:
 modfile = 'Jags_convert_calls_counts.jags'
 #
@@ -184,7 +184,7 @@ s_stats = data.frame(s$statistics)
 s_quantiles = data.frame(s$quantiles) 
 Np = length(params)
 # Diagnostic plots --------------------------------------------------------
-for (i in 1:(Np-3)){
+for (i in 1:(Np-4)){
   parnm = params[i]
   traplot(out,parnm)
 }
@@ -203,6 +203,21 @@ for (y in 2:NYrs){
   denplot(out,paste0("Yeareff[",y,"]"),ci=.9,collapse = TRUE)
 }
 
+# Compute R2 ------------------------------------------------------------
+R2_sims = numeric(length = nrep)
+ypred = matrix(nrow=nrep,ncol = NSite)
+err = matrix(nrow=nrep,ncol = NSite)
+for (i in 1:NSite){
+    ypred[,i] = outdf[,vn==paste0("Dens[",i,"]")]
+    err[,i] = outdf[,vn==paste0("Err[",i,"]")]
+}
+for (r in 1:Totalreps){
+  R2_sims[r] = var(ypred[r,])/(var(ypred[r,])+var(err[r,]))
+}
+R2 = median(R2_sims)
+plot(density(R2_sims),main = paste0("Function R2 value, ",format(R2,digits=3))
+     ,xlab = "Bayesian R2",ylab = "Posterior density")
+abline(v=R2)
 # Function plots --------------------------------------------------------
 xx =  s_stats[which(startsWith(vn,'Csite')),1]
 yy = s_stats[which(startsWith(vn,'DensN')),1]

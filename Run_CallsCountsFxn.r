@@ -11,7 +11,7 @@ AnalysisFolder = 'Acoustic2'  # Folder path within RootDir where analysis code i
 ResultsFolder = 'CapCays/results'  # Folder path within RootDir where results files stored
 DataFolder = 'CapCays/data'  # Folder path within RootDir where raw data files stored
 RunFile = 'CallsCountsFxn2_10'       # Plotting Script
-Species =  'BLNO'  # Species name for data analysis
+Species =  'WTSH'  # Species name for data analysis
 # Specify results files to be included (one for each year):
 Resultsfiles = c(paste0("Results_", Species,"_2014_2_10"),
                  paste0("Results_", Species,"_2015_2_10"),
@@ -21,7 +21,7 @@ Countsdatfile = c(paste0('Counts_CapCays_',Species,'_2014-2017.csv')) # Name of 
 Areasdatfile = c(paste0('QPWS_CapCays_Strata_Area.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
 Seasondefine = c(2,2,1,1,1,3,3,3,3,3,3,2)
 Nchains = 20
-Nburnin =  7000  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
+Nburnin =  7000  # Number of burn-in reps 
 Nadapt =  100  # Number of adapting reps, default 100
 Totalreps = 10000 # Total desired reps (ie # simulations making up posterior)
 
