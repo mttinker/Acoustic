@@ -17,17 +17,17 @@ start.time <- Sys.time()  # start a timer
 
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 #
-Species =  'Growl_old'  # Species name for data analysis (HAPE,NESH,WTSH,BLNO,BOPE:Aerial,Growl_old,Growl_new)
-Yearfocal =  2016  # Focal year for Bayesian analysis
+Species =  'WTSH'  # Species name for data analysis (HAPE,NESH,WTSH,BLNO,BOPE:Aerial,Growl_old,Growl_new)
+Yearfocal =  2017  # Focal year for Bayesian analysis
 subsamp =  3  # Level of Sub-sampling of entire data set: use every nth record
-data_opt =  2  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
-QC_opt = 1   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
+data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
+QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
 prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
 
-AnalysisFolder = '/home/cmi/bope_cloud_run'  # Folder path within RootDir where analysis code is stored
+AnalysisFolder = '/home/cmi/cloud_7Mar18'  # Folder path within RootDir where analysis code is stored
 RunFile = 'BayesCalls2_10'       # Version of BayesCalls to run
-DataFolder = '/home/cmi/bope_cloud_run'  # Folder path within RootDir where raw data files stored
-ResultsFolder = '/home/cmi/bope_cloud_run'  # Folder path within RootDir where results files stored
+DataFolder = '/home/cmi/cloud_7Mar18'  # Folder path within RootDir where raw data files stored
+ResultsFolder = '/home/cmi/cloud_7Mar18'  # Folder path within RootDir where results files stored
 
 Nchains = 8
 Nburnin =  2750  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
@@ -39,7 +39,7 @@ ProjectYear =  2018  # Year of analysis project
 
 if (Species=='WTSH'|Species=='BLNO') {
   ProjectLocation = 'CapCays'
-  Datafile =  paste0(ProjectLocation,'_Data_2_10_',Species,'_2014-2017_NoAudit.RData')  #Name of data file for analysis 
+  Datafile =  paste0(ProjectLocation,'_',Species,'_Data_2_10_2014-2017_NoAudit.RData')  #Name of data file for analysis 
   calendar_opt =  2  # year range: 1 = All data within calendar year, 2 = data spans New Year
   
   if (data_opt==2) {
@@ -62,15 +62,23 @@ if (Species=='WTSH'|Species=='BLNO') {
   
   # set peak dates (DOY not day of survey)
   if (Species=='WTSH') {
-    peakdates_strt = 50
-    if (Yearfocal==2016) { peakdates_end = 109 } else { peakdates_end = 109 }
-    calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
-    } else if (Species=='BLNO') {
-    # use wide "index" period to capture any peak
+    
+    # acoustic peak period
+    # peakdates_strt = 50
+    # if (Yearfocal==2016) { peakdates_end = 109 } else { peakdates_end = 109 }
+    # calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
+    
+    # peak period = egg laying
     if (Yearfocal==2017) { peakdates_strt = 345 } else { peakdates_strt = 344 } # Dec 10
     if (Yearfocal==2016) { peakdates_end = 121 } else { peakdates_end = 120 } # April 30
-      calendar_pk_opt = 2 # 1 = all in one year, 2 = peak spans new year
-    }
+    calendar_pk_opt = 2 # 1 = all in one year, 2 = peak spans new year
+    
+  } else if (Species=='BLNO') {
+    # use wide "index" period to capture any peak
+    if (Yearfocal==2017) { peakdates_strt = 350 } else { peakdates_strt = 349 } # Dec 15
+    peakdates_end = 31 # Jan 31
+    calendar_pk_opt = 2 # 1 = all in one year, 2 = peak spans new year
+  }
   
   if (Species=='WTSH') {
     peaktimes_strt =  -120  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
@@ -160,7 +168,7 @@ if (Species=='WTSH'|Species=='BLNO') {
   
   # set peak dates (DOY not day of survey)
   peakdates_strt = 32 # Feb 1
-  if (Yearfocal==2016) { peakdates_end = 106 } else { peakdates_end = 105 } # Apr 15
+  if (Yearfocal==2016) { peakdates_end = 91 } else { peakdates_end = 90 } # Mar 31
   calendar_pk_opt = 1 # 1 = all in one year, 2 = peak spans new year
   peaktimes_strt =  50  # Peak time boundary 1, minutes relative to a reference event (sunrise or sunset)
   peaktimes_stop =  110  # Peak time boundary 2, always > than boundary1 (minutes relative to event) 
