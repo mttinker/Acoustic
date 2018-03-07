@@ -17,7 +17,7 @@ StrataNC = as.character(dfC$StrataName)
 StrataNCf = factor(StrataNC)
 YearNest = dfC$contract_year
 Densmeas = dfC$Density
-Monthmeas = month(parse_date_time(as.character(dfC$Count_Date),"ymd"))
+Monthmeas = month(dfC$Count_Date)
 Seasmeas = Seasondefine[Monthmeas]
 Radiusmeas = dfC$Density_Radius
 dfCounts <- data.frame(Year=numeric(),
@@ -178,7 +178,7 @@ Np = length(params)
 
 if (diagnostic_plots) {
   
-  for (i in 1:(Np-3)){
+  for (i in 1:(Np-4)){
     parnm = params[i]
     traplot(out,parnm)
   }
@@ -200,9 +200,9 @@ if (diagnostic_plots) {
 }
 
 # Compute R2 ------------------------------------------------------------
-R2_sims = numeric(length = nrep)
-ypred = matrix(nrow=nrep,ncol = NSite)
-err = matrix(nrow=nrep,ncol = NSite)
+R2_sims = numeric(length = Totalreps)
+ypred = matrix(nrow=Totalreps,ncol = NSite)
+err = matrix(nrow=Totalreps,ncol = NSite)
 for (i in 1:NSite){
     ypred[,i] = outdf[,vn==paste0("Dens[",i,"]")]
     err[,i] = outdf[,vn==paste0("Err[",i,"]")]
@@ -287,6 +287,7 @@ if (ProjectLocation=='CapCays') {
     # scale_x_continuous(limits=c(0,5.5)) +
     xlab("\n Call Rate") + ylab(ylabel) +
     theme_bw() +
+    # coord_flip() +
     theme(legend.position='none',
           axis.text.x=element_text(size=15,margin=margin(10,0,0,0)),
           axis.text.y=element_text(size=15,margin=margin(0,10,0,0)),
@@ -305,6 +306,7 @@ if (ProjectLocation=='CapCays') {
     # scale_x_continuous(limits=c(0,5.5)) +
     xlab("\n Call Rate") + ylab(ylabel) +
     theme_bw() +
+    # coord_flip() +
     theme(legend.position='none',
           axis.text.x=element_text(size=15,margin=margin(10,0,0,0)),
           axis.text.y=element_text(size=15,margin=margin(0,10,0,0)),
