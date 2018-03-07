@@ -1,7 +1,6 @@
 # BAYESIAN DATA CREATION AND PREPROCESSING
 # Cap Cays script (WTSH & BLNO)
 # created 28 February 2017
-# updated 14 November 2017
 
 rm(list=ls())
 gc()
@@ -10,6 +9,8 @@ options(stringsAsFactors=FALSE)
 # Input Variables -------------------------------------------------------------
 
 species='WTSH' # WTSH or BLNO
+
+CountType='Occupied' # 'Occupied' or 'All'
 
 ProjectName='Bayesian_2018'
 ProjectYear=2018
@@ -35,11 +36,11 @@ missing_Packages<- required_Packages[!required_Packages  %in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
 
-# registerDoParallel(makeCluster(4))
-
 for(file in list.files(path = 'D:/CM,Inc/R-Code_improvements/Functions/',pattern = '\\.[Rr]$',full.names = T,recursive = T)){
     source(file)
 }
+
+SiteTypeRegion_Info<-read.csv(file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_SiteInfo_ALL.csv')))
 
 # Data Load -------------------------------------------------------------------
 
@@ -196,7 +197,6 @@ data_ALL<-subset(data_ALL,!duplicated(data_ALL$key))
 # data_ALL<-select(data_ALL,-c(Island))
 
 # bring in site type/region
-SiteTypeRegion_Info<-read.csv(file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_SiteInfo_ALL.csv')))
 data_ALL$Region<-NULL
 data_ALL$SuperRegion<-NULL
 data_ALL$Site_Type<-NULL
@@ -307,10 +307,16 @@ BayesianData<-data_ALL %>%
 TimeStepOne=paste0(TimeStepOne,':00:00')
 
 # Prepare count data -------------------------------------------
-Counts_path=file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_Counts_ALL.csv'))
 
+Counts_path=file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_Counts_ALL.csv'))
 Counts<-read.csv(Counts_path)
-Counts<-select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Density_Radius,Density)
+
+if (CountType=='Occupied') {
+  Counts<-dplyr::select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Density_Radius,Density)
+} else if (CountType=='All') {
+  Counts<-dplyr::select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Density_Radius,Density_noOcc)
+  setnames(Counts,'Density_noOcc','Density')
+}
 
 # for now, take out counts with no corresponding acoustic site
 Counts<-filter(Counts,!is.na(Sensor_Name))
@@ -322,10 +328,11 @@ if (str_detect(tolower(species),'chick')) {
 }
 Counts<-filter(Counts,contract_year>=YearStart & contract_year<=YearStop)
 
-Counts<-left_join(Counts,select(SiteTypeRegion_Info,SPID,contract_year,Island,Habitat,StrataName),by=c('SPID','contract_year','Island'))
+Counts<-left_join(Counts,dplyr::select(SiteTypeRegion_Info,SPID,contract_year,Island,Habitat,StrataName),by=c('SPID','contract_year','Island'))
 
 Counts<-filter(Counts,Species==gsub('_Chick','',species))
 Counts[Counts$contract_year==2014 & Counts$SPID=='NW7',]$SPID<-'NW7 2014'
+Counts$Count_Date=as.Date(Counts$Count_Date,format='%m/%d/%Y')
 
 write.csv(Counts,file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_',str_replace(species,'_Chick',''),'_Counts_',YearStart,'-',YearStop,'.csv')),row.names=F)
 
