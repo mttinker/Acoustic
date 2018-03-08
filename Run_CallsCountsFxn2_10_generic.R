@@ -33,9 +33,8 @@ if (Species=='BOPE'|Species=='Aerial'|str_detect(Species,'Growl')) {
   StopYear = 2017
 }
 
-StrataType = ''; CountType = ''
+CountType = ''; IndexPeriod = ''
 if (ProjectLocation=='Midway') {
-  # StrataType = '_Habitat' # Habitat or Flyover
   CountType = '_T' # Only fill in for Midway, 10M or T
 } else if (ProjectLocation=='CapCays' & Species=='WTSH') {
   IndexPeriod = '_DecJan' # '' (blank) or '_DecJan'

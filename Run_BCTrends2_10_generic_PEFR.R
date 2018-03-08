@@ -21,6 +21,14 @@ if(Species=='BLNO'|Species=='WTSH') {
   ProjectLocation='Midway'
 }
 
+CountType = ''; IndexPeriod = ''
+if (ProjectLocation=='Midway') {
+  CountType = '_T' # Only fill in for Midway, 10M or T
+} else if (ProjectLocation=='CapCays' & Species=='WTSH') {
+  IndexPeriod = '_DecJan' # '' (blank) or '_DecJan'
+  CountType = '_Occupied' # '_TotalBurrows' or '_Occupied'
+}
+
 # Trendtype option: If type = 1, calculate trend for call rate, if 2 calculate for density,
 #  if 3 calculate for "TOTAL" abundance, either whole-Island or whole-region
 #   (assumes ALL strata sampled each year)
@@ -58,10 +66,9 @@ Nsim =  Totalreps/Nchains + Nburnin  # Total # MCMS sims: Actual saved reps = (N
 
 Resultsfiles = c()
 for (i in Years) {
-  Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i))
+  Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i, IndexPeriod))
 }
-Convertfile = paste0(ProjectLocation, '_', Species,'_CallsCountsFxn_2_10')
-Countsdatfile = c(paste0('CapCays_',Species,'_Counts_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+Convertfile = paste0(ProjectLocation, '_', Species,'_CallsCountsFxn_2_10',CountType, IndexPeriod)
 
 RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
 loadfiles = paste0(ResultsFolder,"/",ProjectLocation,'/',Resultsfiles,".Rdata")
