@@ -16,7 +16,7 @@ RunFile = 'CallsCountsFxn2_10'
 
 diagnostic_plots=F
 
-Species =  'Growl_new'  # Species name for data analysis
+Species =  'WTSH'  # Species name for data analysis
 
 # Midway, Kauai, CapCays
 if (Species=='BOPE'|Species=='Aerial'|str_detect(Species,'Growl')) {
@@ -37,6 +37,9 @@ StrataType = ''; CountType = ''
 if (ProjectLocation=='Midway') {
   # StrataType = '_Habitat' # Habitat or Flyover
   CountType = '_T' # Only fill in for Midway, 10M or T
+} else if (ProjectLocation=='CapCays' & Species=='WTSH') {
+  IndexPeriod = '_DecJan' # '' (blank) or '_DecJan'
+  CountType = '_Occupied' # '_TotalBurrows' or '_Occupied'
 }
 
 Nchains = 8
@@ -56,11 +59,11 @@ simsamp = 100;
 
 Resultsfiles = c()
 for (i in StartYear:StopYear) {
-    Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i))
+    Resultsfiles = c(Resultsfiles,paste0(ProjectLocation, '_', Species, '_Results_2_10_', i, IndexPeriod))
 }
 
 if (ProjectLocation=='CapCays') {
-  Countsdatfile = c(paste0(ProjectLocation,'_',Species,'_Counts_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+  Countsdatfile = c(paste0(ProjectLocation,'_',Species,'_Counts',CountType,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   Areasdatfile = c(paste0('CapCays_StrataArea_ALL.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
   Seasondefine = c(2,2,1,1,1,3,3,3,3,3,3,2)
 } else if (ProjectLocation=='Midway') {
@@ -69,7 +72,7 @@ if (ProjectLocation=='CapCays') {
   Seasondefine = c(1,2,3,3,3,3,3,3,3,3,3,3)
 }
 
-savename = paste0(ProjectLocation, '_', Species, '_CallsCountsFxn_2_10', CountType, ".Rdata")
+savename = paste0(ProjectLocation, '_', Species, '_CallsCountsFxn_2_10', CountType, IndexPeriod, ".Rdata")
 RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
 loadfiles = paste0(ResultsFolder,"/",ProjectLocation,'/',Resultsfiles,".Rdata")
 loaddat = paste0(DataFolder,"/",ProjectLocation,'/',Countsdatfile)

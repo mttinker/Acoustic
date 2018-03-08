@@ -10,7 +10,7 @@ options(stringsAsFactors=FALSE)
 
 species='WTSH' # WTSH or BLNO
 
-CountType='Occupied' # 'Occupied' or 'All'
+CountType='Occupied' # 'Occupied' or 'TotalBurrows'
 
 ProjectName='Bayesian_2018'
 ProjectYear=2018
@@ -313,7 +313,7 @@ Counts<-read.csv(Counts_path)
 
 if (CountType=='Occupied') {
   Counts<-dplyr::select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Density_Radius,Density)
-} else if (CountType=='All') {
+} else if (CountType=='TotalBurrows') {
   Counts<-dplyr::select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Density_Radius,Density_noOcc)
   setnames(Counts,'Density_noOcc','Density')
 }
@@ -334,7 +334,7 @@ Counts<-filter(Counts,Species==gsub('_Chick','',species))
 Counts[Counts$contract_year==2014 & Counts$SPID=='NW7',]$SPID<-'NW7 2014'
 Counts$Count_Date=as.Date(Counts$Count_Date,format='%m/%d/%Y')
 
-write.csv(Counts,file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_',str_replace(species,'_Chick',''),'_Counts_',YearStart,'-',YearStop,'.csv')),row.names=F)
+write.csv(Counts,file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_',str_replace(species,'_Chick',''),'_Counts_',CountType,'_',YearStart,'-',YearStop,'.csv')),row.names=F)
 
 # Final check & write ---------------------------------------------------------
 

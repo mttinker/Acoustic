@@ -198,7 +198,7 @@ if (data_opt>1){
   loadfile2 =  paste0(DataFolder,"/",Countsdatfile)
 }
 BayesModelVersion = str_replace(str_replace(basename(RunFile),'BayesCalls',''),'.R','')
-SaveResults = paste0(ResultsFolder,'/', ProjectLocation,'/', ProjectLocation, '_', Species, '_Results_',BayesModelVersion,'_',Yearfocal,".Rdata")
+SaveResults = paste0(ResultsFolder,'/', ProjectLocation, '_', Species, '_Results_',BayesModelVersion,'_',Yearfocal,".Rdata")
 
 #
 # Run Bayesian Analysis -----------------------------------------------------
