@@ -8,7 +8,7 @@ options(stringsAsFactors=FALSE)
 
 # Input Variables -------------------------------------------------------------
 
-species='HAPE' # HAPE or NESH
+species='NESH' # HAPE or NESH
 
 ProjectName='Bayesian_2018'
 ProjectYear=2018
@@ -45,7 +45,8 @@ if (YearStart<=2017 & YearStop>=2017) {
   data_2017_Rovers_path<-paste0(Dropbox,'/2017/DOFAW_KESRP_Rovers_2017/R_output/AnalysisData_DOFAW_KESRP_Rovers_2017_',species,'28Nov17.csv') # KSHCP + Rovers + Lehua
   data_2017_HKPI_path<-paste0(Dropbox,'/2017/ABC_KESRP_hkpi_hono_2017/R_output/AnalysisData_ABC_KESRP_hkpi_hono_2017_',species,'06Dec17.csv')
   data_2017_Lanai_path<-paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2017/USFWS_Lanai_2017/R_output/AnalysisData_USFWS_Lanai_2017_',species,'08Dec17.csv')
-
+  data_2017_HKPI_Rov_path<-paste0('D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/KESRP_ABC_HKPI_HKOA_Aug17Rov_2018/R_output/AnalysisData_KESRP_ABC_HKPI_HKOA_Aug17Rov_2018_',species,'19Mar18.csv')
+  
   # read in 2017 datas
   data_2017_HONO<-read.csv(data_2017_HONO_path)
   data_2017_ULP<-read.csv(data_2017_ULP_path)
@@ -53,6 +54,7 @@ if (YearStart<=2017 & YearStop>=2017) {
   data_2017_Rovers<-read.csv(data_2017_Rovers_path) # KSHCP + Rovers + Lehua
   data_2017_HKPI<-read.csv(data_2017_HKPI_path)
   data_2017_Lanai<-read.csv(data_2017_Lanai_path)  
+  data_2017_HKPI_Rov<-read.csv(data_2017_HKPI_Rov_path)  
   
   # record sources of 2017 data
   data_2017_HONO$Source<-data_2017_HONO_path
@@ -61,12 +63,13 @@ if (YearStart<=2017 & YearStop>=2017) {
   data_2017_Rovers$Source<-data_2017_Rovers_path
   data_2017_HKPI$Source<-data_2017_HKPI_path
   data_2017_Lanai$Source<-data_2017_Lanai_path
+  data_2017_HKPI_Rov$Source<-data_2017_HKPI_Rov_path
   
   data_2017_HONO$Round<-NA
   data_2017_HONO<-filter(data_2017_HONO,!str_detect(SPID,'-SM4'))
   
-  data_2017<-bind_rows(data_2017_HONO,data_2017_ULP,data_2017_Manoa,data_2017_Rovers,data_2017_HKPI,data_2017_Lanai)
-  rm(data_2017_HONO,data_2017_ULP,data_2017_Manoa,data_2017_Rovers,data_2017_HKPI,data_2017_Lanai)
+  data_2017<-bind_rows(data_2017_HONO,data_2017_ULP,data_2017_Manoa,data_2017_Rovers,data_2017_HKPI,data_2017_Lanai,data_2017_HKPI_Rov)
+  rm(data_2017_HONO,data_2017_ULP,data_2017_Manoa,data_2017_Rovers,data_2017_HKPI,data_2017_Lanai,data_2017_HKPI_Rov)
   
 }
 

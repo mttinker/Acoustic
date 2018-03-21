@@ -38,7 +38,7 @@ if (ProjectLocation=='Midway') {
   CountType = '_T' # Only fill in for Midway, 10M or T
 } else if (ProjectLocation=='CapCays' & Species=='WTSH') {
   IndexPeriod = '_DecJan' # '' (blank) or '_DecJan'
-  CountType = '_Occupied' # '_TotalBurrows' or '_Occupied'
+  CountType = '_TotalBurrows' # '_TotalBurrows' or '_Occupied'
 }
 
 Nchains = 8
