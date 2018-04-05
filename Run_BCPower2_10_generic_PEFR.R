@@ -13,10 +13,10 @@ ResultsFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/re
 DataFolder = 'D:/CM,Inc/Dropbox (CMI)/CMI_Team/Analysis/2018/Bayesian_2018/data'  
 RunFile = 'BayesCallsPower2_10'       # Plotting Script
 
-Species =  'WTSH'  # Species name for data analysis
-Yearfocal = 2016 # results file used for variance parameter estimates
+Species =  'HAPE'  # Species name for data analysis
+Yearfocal = 2017 # results file used for variance parameter estimates
 
-Strata_trends = c('North West Pisonia')
+Strata_trends = c('Upper Limahuli')
 
 if(Species=='BLNO'|Species=='WTSH') {
   ProjectLocation='CapCays'
@@ -33,17 +33,19 @@ if (Species=='WTSH') {CountType = '_TotalBurrows'; IndexPeriod = '_DecJan'} # '_
 # Set parameters for Power Analysis
 NyrsP = 10          # Number of Years of Monitoring
 TRUE_r = -0.035     # Desired detectable trend (ie true trend)
-NSiteA = 500         # Number of Sites Monitored per year (Acoustic)
-Countfreq = 1       # Frequency of nest counts (counts every X years)(0=no counts)
-NSiteC = 500         # Number of Sites with nest counts on count years
+NSiteA = 10         # Number of Sites Monitored per year (Acoustic)
+Countfreq = 0       # Frequency of nest counts (counts every X years)(0=no counts)
+NSiteC = 10         # Number of Sites with nest counts on count years
 NcountsPSite = 1    # Avg Number Nest count replicates per site 
-RecPsite = 10000     # Number of 15min acoustic records per site
+RecPsite = 5000     # Number of 15min acoustic records per site
 P_signif = 0.95     # Desired level of certainty for CI and P values
 
 if (Species=='WTSH') {
   Sigma_r = 0.13       # Process error: standard deviation in trend over years
 } else if (Species=='BLNO') {
   Sigma_r = 0.1 # 0.1 without 2015, 0.4 with 2015...
+} else if (Species=='HAPE'|Species=='NESH') {
+  Sigma_r = 0.1       # Process error: standard deviation in trend over years
 }
 
 # END USER SPECIFIED PARAMETERS ---------------------------------------------
@@ -68,4 +70,4 @@ loadCdat = paste0(DataFolder,"/",ProjectLocation,'/',Countsdatfile)
 
 source(RunFile)
 
-beep('mario')
+# beep('mario')

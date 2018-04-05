@@ -21,13 +21,13 @@ Species =  'HAPE'  # Species name for data analysis (HAPE,NESH,WTSH,BLNO,BOPE:Ae
 Yearfocal =  2017  # Focal year for Bayesian analysis
 subsamp =  3  # Level of Sub-sampling of entire data set: use every nth record
 data_opt =  1  # Data Option: 1 = Calls Only, 2 = Calls plus Nest Counts
-QC_opt = 0   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
+QC_opt = 1   # QC option: 0 = filter/do not adjust for QC, 1 = adjust call rate w. fitted QC fxn
 prior_opt = 1   # Priors: 1 = uninformed, 2 = informed (must supply results file)
 
-AnalysisFolder = '/home/cmi/kauaiHAPE_run20Mar'  # Folder path within RootDir where analysis code is stored
+AnalysisFolder = '/home/cmi/hape'  # Folder path within RootDir where analysis code is stored
 RunFile = 'BayesCalls2_10'       # Version of BayesCalls to run
-DataFolder = '/home/cmi/kauaiHAPE_run20Mar'  # Folder path within RootDir where raw data files stored
-ResultsFolder = '/home/cmi/kauaiHAPE_run20Mar'  # Folder path within RootDir where results files stored
+DataFolder = '/home/cmi/hape'  # Folder path within RootDir where raw data files stored
+ResultsFolder = '/home/cmi/hape'  # Folder path within RootDir where results files stored
 
 Nchains = 8
 Nburnin =  2750  # Number of burn-in reps Total reps = (Nsim-Nburnin) * (num Cores)
