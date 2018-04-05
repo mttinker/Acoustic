@@ -16,6 +16,7 @@ library(ggplot2)
 library(doParallel)
 library(reshape2)
 library(fitdistrplus)
+library(mvtnorm)
 # Load Data ---------------------------------------------------------------
 dfArea = read.csv(file = Areasdatfile, header = TRUE, sep = ",")
 attach(loadfile2); 
