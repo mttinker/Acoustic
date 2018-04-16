@@ -4,7 +4,8 @@
 
 rm(list=ls())
 
-library(beepr)
+# library(beepr)
+library(stringr)
 
 # USER SPECIFIED PARAMETERS -------------------------------------------------
 
@@ -26,17 +27,18 @@ if(Species=='BLNO'|Species=='WTSH') {
   ProjectLocation='Midway'
 }
 
-CountType = ''; IndexPeriod = ''
+CountType = ''; IndexPeriod = ''; QC_opt = '';
 if (Species=='Aerial'|str_detect(Species,'Growl')) {CountType = '_10M'} # _Habitat or _Flyover, _10M or _T
 if (Species=='WTSH') {CountType = '_TotalBurrows'; IndexPeriod = '_DecJan'} # '_TotalBurrows' or '_Occupied', '' (blank) or '_DecJan'
+if (Species=='HAPE'|Species=='NESH') {QC_opt='_QC1'}
 
 # Set parameters for Power Analysis
 NyrsP = 10          # Number of Years of Monitoring
 TRUE_r = -0.035     # Desired detectable trend (ie true trend)
 NSiteA = 10         # Number of Sites Monitored per year (Acoustic)
 Countfreq = 0       # Frequency of nest counts (counts every X years)(0=no counts)
-NSiteC = 10         # Number of Sites with nest counts on count years
-NcountsPSite = 1    # Avg Number Nest count replicates per site 
+NSiteC = 0         # Number of Sites with nest counts on count years
+NcountsPSite = 0    # Avg Number Nest count replicates per site 
 RecPsite = 5000     # Number of 15min acoustic records per site
 P_signif = 0.95     # Desired level of certainty for CI and P values
 
@@ -58,14 +60,14 @@ if (Species=='WTSH') {
 simreps = 1500       # Number reps for Power analysis (recomend at least 100)
 
 # Specify results file to use for variance parameter estimates:
-Resultsfile = c(paste0(ProjectLocation, '_', Species, '_Results_2_10_', Yearfocal,IndexPeriod))
-Convertfile = paste0(ProjectLocation, '_', Species, '_CallsCountsFxn_2_10', CountType, IndexPeriod)
-Countsdatfile = c(paste0(ProjectLocation,'_',Species,'_Counts',CountType,'_2014-2017.csv')) # Name of matching data file with nest count data (OTIONAL, enter blank if no nest counts)
+Resultsfile = c(paste0(ProjectLocation, '_', Species, '_Results_2_10_', Yearfocal,IndexPeriod,QC_opt))
+if (Species!='HAPE'&Species!='NESH') {Convertfile = paste0(ProjectLocation, '_', Species, '_CallsCountsFxn_2_10', CountType, IndexPeriod)} else {Convertfile = ''}
+if (Species!='HAPE'&Species!='NESH') {Countsdatfile = c(paste0(ProjectLocation,'_',Species,'_Counts',CountType,'_2014-2017.csv'))} else {Countsdatfile = ''}
 
 RunFile = paste0(AnalysisFolder,"/",RunFile,".r")
 loadfile = paste0(ResultsFolder,"/",ProjectLocation,'/',Resultsfile,".Rdata")
 loadfile2 = paste0(ResultsFolder,"/",ProjectLocation,'/',Convertfile,".Rdata")
-Areasdatfile = paste0(DataFolder,'/CapCays/CapCays_StrataArea_ALL.csv')
+if (Species!='HAPE'&Species!='NESH') {Areasdatfile = paste0(DataFolder,'/CapCays/CapCays_StrataArea_ALL.csv')} else {Areasdatfile = ''}
 loadCdat = paste0(DataFolder,"/",ProjectLocation,'/',Countsdatfile)
 
 source(RunFile)
