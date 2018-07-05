@@ -265,22 +265,23 @@ if (YearStart<=2015 & YearStop>=2015) {
   data_2015_Lehua<-left_join(data_2015_Lehua,MappingTable2015Lehua,by='SPID')
   rm(MappingTable2015Lehua)
   
-  data_2015_Lanai$SPID<-as.character(data_2015_Lanai$SPID)
-  data_2015_Lanai$SPID[data_2015_Lanai$SPID=='Hii']='HII03'
-  data_2015_Lanai$SPID[data_2015_Lanai$SPID=='Nhauola']='NHAU01'
-  data_2015_Lanai$SPID[data_2015_Lanai$SPID=='Ehauola']='EHAU02'
-  
-  data_2015_Lanai$Round<-NA
-  data_2015_Lanai$Mic_Type<-NA
-  data_2015_Lanai$Site_Type<-NA
-  data_2015_Lanai$Site_Description<-NA
-  data_2015_Lanai$SuperRegion<-NA
-  data_2015_Lanai$Region<-NA
-  data_2015_Lanai$Island<-NA
-  data_2015_Lanai$Easting<-NA
-  data_2015_Lanai$Northing<-NA
-  
   if (species=='HAPE') {
+    
+    data_2015_Lanai$SPID<-as.character(data_2015_Lanai$SPID)
+    data_2015_Lanai$SPID[data_2015_Lanai$SPID=='Hii']='HII03'
+    data_2015_Lanai$SPID[data_2015_Lanai$SPID=='Nhauola']='NHAU01'
+    data_2015_Lanai$SPID[data_2015_Lanai$SPID=='Ehauola']='EHAU02'
+    
+    data_2015_Lanai$Round<-NA
+    data_2015_Lanai$Mic_Type<-NA
+    data_2015_Lanai$Site_Type<-NA
+    data_2015_Lanai$Site_Description<-NA
+    data_2015_Lanai$SuperRegion<-NA
+    data_2015_Lanai$Region<-NA
+    data_2015_Lanai$Island<-NA
+    data_2015_Lanai$Easting<-NA
+    data_2015_Lanai$Northing<-NA
+    
     data_2015<-bind_rows(data_2015_ULPHONO, data_2015_FIWI, data_2015_Lehua, data_2015_Manoa, data_2015_Lanai)
     rm(data_2015_FIWI,data_2015_Lehua,data_2015_Manoa,data_2015_ULPHONO, data_2015_Lanai)
   } else if (species=='NESH') {

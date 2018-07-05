@@ -8,9 +8,9 @@ options(stringsAsFactors=FALSE)
 
 # Input Variables -------------------------------------------------------------
 
-species='WTSH' # WTSH or BLNO
+species='BLNO' # WTSH or BLNO
 
-CountType='Occupied' # 'Occupied' or 'TotalBurrows'
+CountType='' # 'Occupied' or 'TotalBurrows'
 
 ProjectName='Bayesian_2018'
 ProjectYear=2018
@@ -312,11 +312,18 @@ Counts_path=file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,pas
 Counts<-read.csv(Counts_path)
 
 if (CountType=='Occupied') {
-  Counts<-dplyr::select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Density_Radius,Density)
+  if (species=='WTSH') {
+    # take out counts where I fudged occupancy
+    Counts<-filter(Counts,!str_detect(Notes,'used occupancy from'))
+  }
+  Counts<-dplyr::select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Count_Size,Density)
 } else if (CountType=='TotalBurrows') {
-  Counts<-dplyr::select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Density_Radius,Density_noOcc)
+  Counts<-dplyr::select(Counts,SPID,Sensor_Name,contract_year,Island,Count_Date,Species,Count_Size,Density_noOcc)
   setnames(Counts,'Density_noOcc','Density')
 }
+
+# rename radius column
+setnames(Counts,'Count_Size','Density_Radius')
 
 # for now, take out counts with no corresponding acoustic site
 Counts<-filter(Counts,!is.na(Sensor_Name))
@@ -334,7 +341,12 @@ Counts<-filter(Counts,Species==gsub('_Chick','',species))
 Counts[Counts$contract_year==2014 & Counts$SPID=='NW7',]$SPID<-'NW7 2014'
 Counts$Count_Date=as.Date(Counts$Count_Date,format='%m/%d/%Y')
 
-write.csv(Counts,file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_',str_replace(species,'_Chick',''),'_Counts_',CountType,'_',YearStart,'-',YearStop,'.csv')),row.names=F)
+if (species=='WTSH') {
+  Counts_path_out=file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_',str_replace(species,'_Chick',''),'_Counts_',CountType,'_',YearStart,'-',YearStop,'.csv'))
+} else {
+  Counts_path_out=file.path(Dropbox,ProjectYear,ProjectName,'data',ProjectLocation,paste0(ProjectLocation,'_',str_replace(species,'_Chick',''),'_Counts_',YearStart,'-',YearStop,'.csv'))
+}
+write.csv(Counts,Counts_path_out,row.names=F)
 
 # Final check & write ---------------------------------------------------------
 
